@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "WMdy3Apvgio=",
+  "success": true,
+  "projectFilePath": "/home/slinga/Desktop/ASP/shopiy/shopiy.csproj",
+  "expectedPackageFiles": [
+    "/home/slinga/.nuget/packages/microsoft.aspnetcore.openapi/10.0.9/microsoft.aspnetcore.openapi.10.0.9.nupkg.sha512",
+    "/home/slinga/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

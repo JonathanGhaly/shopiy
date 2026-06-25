@@ -1,0 +1,6 @@
+@shopiy_HostAddress = http://localhost:5055
+
+GET {{shopiy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
