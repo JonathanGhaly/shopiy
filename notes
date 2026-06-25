@@ -1,0 +1,36 @@
+Part 1: Solution structure + Domain layer (Entities, Interfaces)
+Part 2: Infrastructure (DbContext, Identity, JWT, Refresh Tokens)
+Part 3: Application layer (Commands, Queries, DTOs, Validators)
+Part 4: API (Controllers, Middleware, Dependency Injection)
+Part 5: Unit and Integration Tests
+Part 6: Docker, appsettings, GitHub Actions, Swagger, Seed Data
+
+2.1 Persistence
+ApplicationDbContext
+Entity Configurations
+Service Registration
+    ✅ ApplicationDbContext
+    ✅ ProductConfiguration.cs
+    ✅ CategoryConfiguration.cs
+    ✅ ProductCategoryConfiguration.cs
+    ✅ OrderConfiguration.cs
+    ✅ OrderItemConfiguration.cs
+    ✅ RefreshTokenConfiguration.cs
+    ✅ PersistenceServiceRegistration.cs
+✅ 2.2 ASP.NET Core Identity
+✅ ApplicationUser
+✅ Identity configuration
+✅ Identity service registration
+✅ 2.3 JWT Authentication
+✅ JwtOptions
+✅ JwtService
+Authentication configuration
+2.4 Refresh Token implementation
+RefreshTokenService
+Cookie handling
+Token rotation
+2.5 Supporting services
+Email
+DateTimeProvider
+CurrentUserService
+
