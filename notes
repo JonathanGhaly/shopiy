@@ -24,7 +24,7 @@ Service Registration
 ✅ 2.3 JWT Authentication
 ✅ JwtOptions
 ✅ JwtService
-Authentication configuration
+✅ Authentication configuration
 2.4 Refresh Token implementation
 RefreshTokenService
 Cookie handling
@@ -34,3 +34,14 @@ Email
 DateTimeProvider
 CurrentUserService
 
+The implementation order would be:
+
+Common
+Authentication DTOs
+Register
+Login
+Refresh Token
+Logout
+Products
+Categories
+Orders
