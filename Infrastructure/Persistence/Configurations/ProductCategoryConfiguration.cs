@@ -1,4 +1,3 @@
-```csharp
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shopiy.Domain.Entities;
@@ -53,4 +52,3 @@ public sealed class ProductCategoryConfiguration : IEntityTypeConfiguration<Prod
             .HasDatabaseName("idx_product_categories_category_id");
     }
 }
-```

@@ -1,4 +1,4 @@
-namespace Shopiy.Domain.Common;
+namespace Shopiy.Domain.Enums;
 
 public enum OrderStatus
 {

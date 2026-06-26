@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shopiy.Domain.Entities;
+using Shopiy.Domain.Interfaces;
 
 namespace Shopiy.Domain.Interfaces;
 

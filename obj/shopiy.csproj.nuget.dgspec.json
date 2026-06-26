@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/slinga/Desktop/ASP/shopiy/shopiy.csproj": {}
+    "F:\\Assissment\\shopiy\\shopiy.csproj": {}
   },
   "projects": {
-    "/home/slinga/Desktop/ASP/shopiy/shopiy.csproj": {
+    "F:\\Assissment\\shopiy\\shopiy.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/slinga/Desktop/ASP/shopiy/shopiy.csproj",
+        "projectUniqueName": "F:\\Assissment\\shopiy\\shopiy.csproj",
         "projectName": "shopiy",
-        "projectPath": "/home/slinga/Desktop/ASP/shopiy/shopiy.csproj",
-        "packagesPath": "/home/slinga/.nuget/packages/",
-        "outputPath": "/home/slinga/Desktop/ASP/shopiy/obj/",
+        "projectPath": "F:\\Assissment\\shopiy\\shopiy.csproj",
+        "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
+        "outputPath": "F:\\Assissment\\shopiy\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/slinga/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -49,6 +49,10 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[10.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[10.0.9, )"
             }
           },
           "imports": [
@@ -70,7 +74,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/slinga/.dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
