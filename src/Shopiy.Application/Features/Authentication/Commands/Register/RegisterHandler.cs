@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Shopiy.Application.DTOs.Authentication;
 using Shopiy.Domain.Interfaces;
-using Shopiy.Infrastructure.Identity;
+using Shopiy.Domain.Entities;
 
 namespace Shopiy.Application.Features.Authentication.Commands.Register;
 
@@ -58,7 +58,7 @@ public sealed class RegisterHandler
 
         var roles = await _userManager.GetRolesAsync(user);
 
-        var accessToken = await _jwtService.GenerateTokenAsync(user);
+        var accessToken = await _jwtService.GenerateTokenAsync  (user.Id, user.Email!, roles);
 
         var refreshToken =
             await _refreshTokenService.GenerateAsync(user.Id);

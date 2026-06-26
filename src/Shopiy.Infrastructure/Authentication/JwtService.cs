@@ -16,19 +16,15 @@ public sealed class JwtService : IJwtService
         _jwtOptions = jwtOptions.Value;
     }
 
-    public string GenerateAccessToken(
+    public async Task<string> GenerateTokenAsync(
         Guid userId,
         string email,
-        IList<string> roles)
+        IEnumerable<string> roles)
     {
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new(JwtRegisteredClaimNames.Email, email),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-
-            new(ClaimTypes.NameIdentifier, userId.ToString()),
-            new(ClaimTypes.Email, email)
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Email, email)
         };
 
         foreach (var role in roles)

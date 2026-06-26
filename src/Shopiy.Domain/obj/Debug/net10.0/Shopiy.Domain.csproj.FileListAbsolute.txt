@@ -1,0 +1,12 @@
+F:\Assissment\shopiy\src\Shopiy.Domain\bin\Debug\net10.0\Shopiy.Domain.deps.json
+F:\Assissment\shopiy\src\Shopiy.Domain\bin\Debug\net10.0\Shopiy.Domain.dll
+F:\Assissment\shopiy\src\Shopiy.Domain\bin\Debug\net10.0\Shopiy.Domain.pdb
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.GeneratedMSBuildEditorConfig.editorconfig
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.AssemblyInfoInputs.cache
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.AssemblyInfo.cs
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.csproj.CoreCompileInputs.cache
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.sourcelink.json
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.dll
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\refint\Shopiy.Domain.dll
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\Shopiy.Domain.pdb
+F:\Assissment\shopiy\src\Shopiy.Domain\obj\Debug\net10.0\ref\Shopiy.Domain.dll

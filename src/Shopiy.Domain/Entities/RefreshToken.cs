@@ -20,8 +20,7 @@ public class RefreshToken : BaseEntity
 
     public string? RevokedByIp { get; set; }
 
-    // This is NOT stored in the database.
-    // It is only used to return the generated token to the caller.
+
     [NotMapped]
     public string? PlainTextToken { get; set; }
 

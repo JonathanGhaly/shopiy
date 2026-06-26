@@ -1,6 +1,6 @@
-using Shopiy.Infrastructure;
-using Shopiy.Infrastructure.DependencyInjection;
-using Shopiy.Infrastructure.Identity;
+// using Shopiy.Infrastructure;
+// using Shopiy.Infrastructure.DependencyInjection;
+// using Shopiy.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +14,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddPersistence(builder.Configuration);
+// builder.Services.AddPersistence(builder.Configuration);
 
-builder.Services.AddIdentityServices(builder.Configuration);
-
-builder.Services.AddJwtAuthentication(builder.Configuration);
+// builder.Services.AddIdentityServices(builder.Configuration);
+// 
+// builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Uncomment when implemented
 // builder.Services.AddApplication();
@@ -45,7 +45,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-await IdentitySeeder.SeedAsync(app.Services);
+// await IdentitySeeder.SeedAsync(app.Services);
 
 app.UseHttpsRedirection();
 

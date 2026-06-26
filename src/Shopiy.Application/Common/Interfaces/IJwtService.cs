@@ -1,6 +1,6 @@
+using Shopiy.Domain.Entities;
 namespace Shopiy.Domain.Interfaces;
-
 public interface IJwtService
 {
-    string GenerateAccessToken(Guid userId, string email, IList<string> roles);
+    Task<string> GenerateTokenAsync(Guid userId, string email, IEnumerable<string> roles);
 }

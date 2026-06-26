@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shopiy.Domain.Entities;
 using Shopiy.Infrastructure.Identity;
 using Shopiy.Infrastructure.Persistence;
 using System.Security.Claims;

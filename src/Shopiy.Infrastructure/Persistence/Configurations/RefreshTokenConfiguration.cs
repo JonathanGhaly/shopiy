@@ -82,7 +82,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
         // Assumes ApplicationUser does not expose a
         // RefreshTokens navigation property.
-        builder.HasOne<Infrastructure.Identity.ApplicationUser>()
+        builder.HasOne<Shopiy.Domain.Entities.ApplicationUser>()
             .WithMany()
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
