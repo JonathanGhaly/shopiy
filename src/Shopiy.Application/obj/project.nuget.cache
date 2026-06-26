@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nTuP4+6V52s=",
+  "dgSpecHash": "s+4RDqhXi0k=",
   "success": true,
-  "projectFilePath": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
+  "projectFilePath": "f:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\jghal\\.nuget\\packages\\automapper\\16.1.1\\automapper.16.1.1.nupkg.sha512",
     "C:\\Users\\jghal\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",

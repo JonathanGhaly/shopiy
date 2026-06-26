@@ -13,9 +13,11 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.0-preview.5.25277.114",
           "Microsoft.EntityFrameworkCore": "10.0.0-preview.5.25277.114",
           "Microsoft.EntityFrameworkCore.Design": "10.0.0-preview.5.25277.114",
+          "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.6",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0-preview.5",
           "Shopiy.Application": "1.0.0",
           "Shopiy.Domain": "1.0.0",
+          "StackExchange.Redis": "2.8.16",
           "System.IdentityModel.Tokens.Jwt": "8.14.0"
         },
         "runtime": {
@@ -497,6 +499,17 @@
           }
         }
       },
+      "Microsoft.Extensions.Caching.StackExchangeRedis/9.0.6": {
+        "dependencies": {
+          "StackExchange.Redis": "2.8.16"
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Caching.StackExchangeRedis.dll": {
+            "assemblyVersion": "9.0.6.0",
+            "fileVersion": "9.0.625.26701"
+          }
+        }
+      },
       "Microsoft.Extensions.DependencyModel/10.0.0-preview.5.25277.114": {
         "runtime": {
           "lib/net10.0/Microsoft.Extensions.DependencyModel.dll": {
@@ -614,6 +627,25 @@
           "lib/net10.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
             "assemblyVersion": "10.0.0.0",
             "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Pipelines.Sockets.Unofficial/2.2.8": {
+        "runtime": {
+          "lib/net5.0/Pipelines.Sockets.Unofficial.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "2.2.8.1080"
+          }
+        }
+      },
+      "StackExchange.Redis/2.8.16": {
+        "dependencies": {
+          "Pipelines.Sockets.Unofficial": "2.2.8"
+        },
+        "runtime": {
+          "lib/net6.0/StackExchange.Redis.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.8.16.12844"
           }
         }
       },
@@ -787,6 +819,9 @@
         }
       },
       "Shopiy.Domain/1.0.0": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "10.0.0-preview.5.25277.114"
+        },
         "runtime": {
           "Shopiy.Domain.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -956,6 +991,13 @@
       "path": "microsoft.entityframeworkcore.relational/10.0.0-preview.5.25277.114",
       "hashPath": "microsoft.entityframeworkcore.relational.10.0.0-preview.5.25277.114.nupkg.sha512"
     },
+    "Microsoft.Extensions.Caching.StackExchangeRedis/9.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gqKiiGz5JylPuIy6/jl/j0ufeNvdKTAKcp+Q487cxxtcDciBHSywNh7qrmygCnFCA2ytnJtjdgRZg0AzkCK2oQ==",
+      "path": "microsoft.extensions.caching.stackexchangeredis/9.0.6",
+      "hashPath": "microsoft.extensions.caching.stackexchangeredis.9.0.6.nupkg.sha512"
+    },
     "Microsoft.Extensions.DependencyModel/10.0.0-preview.5.25277.114": {
       "type": "package",
       "serviceable": true,
@@ -1039,6 +1081,20 @@
       "sha512": "sha512-c3St573jBTUI00pyZDVG2E/P1tFf4YSxXuQaKEqU/xU1C+eNaRcHhhjQBKSD7x5whsf/9NQwA76fds8kXj0zJw==",
       "path": "npgsql.entityframeworkcore.postgresql/10.0.0-preview.5",
       "hashPath": "npgsql.entityframeworkcore.postgresql.10.0.0-preview.5.nupkg.sha512"
+    },
+    "Pipelines.Sockets.Unofficial/2.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zG2FApP5zxSx6OcdJQLbZDk2AVlN2BNQD6MorwIfV6gVj0RRxWPEp2LXAxqDGZqeNV1Zp0BNPcNaey/GXmTdvQ==",
+      "path": "pipelines.sockets.unofficial/2.2.8",
+      "hashPath": "pipelines.sockets.unofficial.2.2.8.nupkg.sha512"
+    },
+    "StackExchange.Redis/2.8.16": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WaoulkOqOC9jHepca3JZKFTqndCWab5uYS7qCzmiQDlrTkFaDN7eLSlEfHycBxipRnQY9ppZM7QSsWAwUEGblw==",
+      "path": "stackexchange.redis/2.8.16",
+      "hashPath": "stackexchange.redis.2.8.16.nupkg.sha512"
     },
     "System.CodeDom/9.0.0": {
       "type": "package",

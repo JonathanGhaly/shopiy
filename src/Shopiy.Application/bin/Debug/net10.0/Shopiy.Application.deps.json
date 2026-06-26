@@ -130,6 +130,9 @@
         }
       },
       "Shopiy.Domain/1.0.0": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "10.0.0-preview.5.25277.114"
+        },
         "runtime": {
           "Shopiy.Domain.dll": {
             "assemblyVersion": "1.0.0.0",

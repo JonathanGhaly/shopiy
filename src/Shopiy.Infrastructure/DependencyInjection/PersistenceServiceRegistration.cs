@@ -1,13 +1,15 @@
-
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shopiy.Domain.Entities;
 using Shopiy.Domain.Interfaces;
-using Shopiy.Infrastructure.Identity;
+using Shopiy.Infrastructure.Cache;
 using Shopiy.Infrastructure.Persistence;
+using Shopiy.Infrastructure.Services;
+using StackExchange.Redis;
 
 namespace Shopiy.Infrastructure;
 
@@ -17,6 +19,10 @@ public static class PersistenceServiceRegistration
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // ──────────────────────────
+        // PostgreSQL via EF Core
+        // ──────────────────────────
+
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseNpgsql(
@@ -41,10 +47,41 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
 
+        // ──────────────────────────
+        // Redis Caching
+        // ──────────────────────────
+
+        var redisConn = configuration.GetConnectionString("Redis");
+
+        if (!string.IsNullOrWhiteSpace(redisConn))
+        {
+            services.AddSingleton<IConnectionMultiplexer>(
+                ConnectionMultiplexer.Connect(redisConn));
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConn;
+                options.InstanceName = "shopiy:";
+            });
+        }
+        else
+        {
+            // Fallback to in-memory cache for development without Redis
+            services.AddDistributedMemoryCache();
+
+            // Register a no-op multiplexer to prevent DI failures
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect("localhost:6379,abortConnect=false"));
+        }
+
+        services.AddScoped<ICacheService, RedisCacheService>();
+
+        // ──────────────────────────
+        // Identity (Password rules, lockout, email uniqueness)
+        // ──────────────────────────
+
         services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
         {
-            // Password
-
             options.Password.RequiredLength = 8;
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
@@ -52,20 +89,13 @@ public static class PersistenceServiceRegistration
             options.Password.RequireNonAlphanumeric = true;
             options.Password.RequiredUniqueChars = 1;
 
-            // User
-
             options.User.RequireUniqueEmail = true;
-
-            // Sign In
 
             options.SignIn.RequireConfirmedEmail = true;
 
-            // Lockout
-
             options.Lockout.AllowedForNewUsers = true;
             options.Lockout.MaxFailedAccessAttempts = 5;
-            options.Lockout.DefaultLockoutTimeSpan =
-                TimeSpan.FromMinutes(15);
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
@@ -77,6 +107,15 @@ public static class PersistenceServiceRegistration
             options.ClaimsIdentity.EmailClaimType = ClaimTypes.Email;
             options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
         });
+
+        // ──────────────────────────
+        // Supporting Services
+        // ──────────────────────────
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

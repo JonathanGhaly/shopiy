@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {}
+    "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {}
   },
   "projects": {
-    "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
+    "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
+        "projectUniqueName": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
         "projectName": "Shopiy.Domain",
-        "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
+        "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
         "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
-        "outputPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\obj\\",
+        "outputPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -45,6 +45,12 @@
         "net10.0": {
           "framework": "net10.0",
           "targetAlias": "net10.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.0-preview.5.25277.114, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

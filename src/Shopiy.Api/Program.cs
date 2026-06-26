@@ -1,6 +1,9 @@
-// using Shopiy.Infrastructure;
-// using Shopiy.Infrastructure.DependencyInjection;
-// using Shopiy.Infrastructure.Identity;
+using Shopiy.Application.DependencyInjection;
+using Shopiy.Infrastructure;
+using Shopiy.Infrastructure.DependencyInjection;
+using Shopiy.Infrastructure.Identity;
+using Shopiy.Api.Extensions;
+using Shopiy.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,19 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 // ------------------------------------
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddOpenApi();
-
-// builder.Services.AddPersistence(builder.Configuration);
-
-// builder.Services.AddIdentityServices(builder.Configuration);
-// 
-// builder.Services.AddJwtAuthentication(builder.Configuration);
-
-// Uncomment when implemented
-// builder.Services.AddApplication();
+builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddIdentityServices(builder.Configuration);
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddApplication();
+builder.Services.AddSwaggerWithJwt();
 
 builder.Services.AddCors(options =>
 {
@@ -40,19 +37,20 @@ var app = builder.Build();
 // Middleware
 // ------------------------------------
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwaggerWithUi();
 }
 
-// await IdentitySeeder.SeedAsync(app.Services);
+await IdentitySeeder.SeedAsync(app.Services);
 
 app.UseHttpsRedirection();
 
 app.UseCors("Default");
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();

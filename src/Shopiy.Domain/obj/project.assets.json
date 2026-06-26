@@ -1,11 +1,78 @@
 {
   "version": 4,
   "targets": {
-    "net10.0": {}
+    "net10.0": {
+      "Microsoft.EntityFrameworkCore/10.0.0-preview.5.25277.114": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore.Abstractions": "10.0.0-preview.5.25277.114"
+        },
+        "compile": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net10.0/Microsoft.EntityFrameworkCore.props": {}
+        }
+      },
+      "Microsoft.EntityFrameworkCore.Abstractions/10.0.0-preview.5.25277.114": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Microsoft.EntityFrameworkCore/10.0.0-preview.5.25277.114": {
+      "sha512": "8kNxO/21U+SnASuSA7s7vJViSCifRSGW7hDz33weki9DwnVax/e6RSGY9hu0vGZw6hFUHIv6pC3r/d6EWlVLdA==",
+      "type": "package",
+      "path": "microsoft.entityframeworkcore/10.0.0-preview.5.25277.114",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "buildTransitive/net10.0/Microsoft.EntityFrameworkCore.props",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.dll",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.xml",
+        "microsoft.entityframeworkcore.10.0.0-preview.5.25277.114.nupkg.sha512",
+        "microsoft.entityframeworkcore.nuspec"
+      ]
+    },
+    "Microsoft.EntityFrameworkCore.Abstractions/10.0.0-preview.5.25277.114": {
+      "sha512": "i9GQBn64X94hO3EVmOM0QhVqVPpfuh9Bb4+Ft7M5QJF9/9aUKORTu8SzGs00C+AXwQsxz9nDPLL0CTcgIovRWw==",
+      "type": "package",
+      "path": "microsoft.entityframeworkcore.abstractions/10.0.0-preview.5.25277.114",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.xml",
+        "microsoft.entityframeworkcore.abstractions.10.0.0-preview.5.25277.114.nupkg.sha512",
+        "microsoft.entityframeworkcore.abstractions.nuspec"
+      ]
+    }
+  },
   "projectFileDependencyGroups": {
-    "net10.0": []
+    "net10.0": [
+      "Microsoft.EntityFrameworkCore >= 10.0.0-preview.5.25277.114"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\jghal\\.nuget\\packages\\": {}
@@ -13,11 +80,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
+      "projectUniqueName": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
       "projectName": "Shopiy.Domain",
-      "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
+      "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
       "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
-      "outputPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\obj\\",
+      "outputPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -51,6 +118,12 @@
       "net10.0": {
         "framework": "net10.0",
         "targetAlias": "net10.0",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": {
+            "target": "Package",
+            "version": "[10.0.0-preview.5.25277.114, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",

@@ -1,6 +1,6 @@
 namespace Shopiy.Application.DTOs.Authentication;
 
-public sealed class AuthResponse
+public sealed record AuthResponse
 {
     public string AccessToken { get; init; } = string.Empty;
 

@@ -6,7 +6,7 @@ using Shopiy.Infrastructure.Identity;
 
 namespace Shopiy.Infrastructure.Persistence;
 
-public sealed class ApplicationDbContext
+public class ApplicationDbContext
     : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>,
       IApplicationDbContext
 {

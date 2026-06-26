@@ -13,7 +13,6 @@ F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\MediatR.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\MediatR.Contracts.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
-F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Abstractions.dll
 F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
@@ -60,3 +59,6 @@ F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\refint\Shopiy.Api.dll
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\Shopiy.Api.pdb
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\Shopiy.Api.genruntimeconfig.cache
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\ref\Shopiy.Api.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Pipelines.Sockets.Unofficial.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\StackExchange.Redis.dll

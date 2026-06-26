@@ -215,17 +215,17 @@ Products
 
 Commands
 
-CreateProduct
+    CreateProduct
 
-UpdateProduct
+    UpdateProduct
 
-DeleteProduct
+    DeleteProduct
 
 Queries
 
-GetProduct
+    GetProduct
 
-GetProducts
+    GetProducts
 ```
 
 Each folder contains

@@ -36,6 +36,10 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasIndex(x => x.Slug)
             .IsUnique();
 
+        builder.Property(x => x.Description)
+            .HasColumnName("description")
+            .HasMaxLength(500);
+
         builder.Property(x => x.ParentId)
             .HasColumnName("parent_id");
 
