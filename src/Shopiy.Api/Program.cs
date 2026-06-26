@@ -4,6 +4,8 @@ using Shopiy.Infrastructure.DependencyInjection;
 using Shopiy.Infrastructure.Identity;
 using Shopiy.Api.Extensions;
 using Shopiy.Api.Middleware;
+using Shopiy.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +46,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerWithUi();
 }
 
-await IdentitySeeder.SeedAsync(app.Services);
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<ApplicationDbContext>();
+
+    await db.Database.MigrateAsync();
+
+    await IdentitySeeder.SeedAsync(services);
+}
 
 app.UseHttpsRedirection();
 

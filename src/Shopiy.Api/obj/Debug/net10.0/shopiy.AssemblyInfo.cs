@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("shopiy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aa1e3f571f87a2d3a20f18232897abc9d6161a77")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96cb3c774be36374084fe15b90fb6537dea0ed96")]
 [assembly: System.Reflection.AssemblyProductAttribute("shopiy")]
 [assembly: System.Reflection.AssemblyTitleAttribute("shopiy")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

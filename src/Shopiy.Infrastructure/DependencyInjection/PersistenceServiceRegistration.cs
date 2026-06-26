@@ -80,38 +80,45 @@ public static class PersistenceServiceRegistration
         // Identity (Password rules, lockout, email uniqueness)
         // ──────────────────────────
 
-        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
-        {
-            options.Password.RequiredLength = 8;
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequireUppercase = true;
-            options.Password.RequireNonAlphanumeric = true;
-            options.Password.RequiredUniqueChars = 1;
+        // services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+        // {
+        //     options.Password.RequiredLength = 8;
+        //     options.Password.RequireDigit = true;
+        //     options.Password.RequireLowercase = true;
+        //     options.Password.RequireUppercase = true;
+        //     options.Password.RequireNonAlphanumeric = true;
+        //     options.Password.RequiredUniqueChars = 1;
 
-            options.User.RequireUniqueEmail = true;
+        //     options.User.RequireUniqueEmail = true;
 
-            options.SignIn.RequireConfirmedEmail = true;
+        //     options.SignIn.RequireConfirmedEmail = true;
 
-            options.Lockout.AllowedForNewUsers = true;
-            options.Lockout.MaxFailedAccessAttempts = 5;
-            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-        })
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
+        //     options.Lockout.AllowedForNewUsers = true;
+        //     options.Lockout.MaxFailedAccessAttempts = 5;
+        //     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        // })
+        // .AddEntityFrameworkStores<ApplicationDbContext>()
+        // .AddDefaultTokenProviders();
 
-        services.Configure<IdentityOptions>(options =>
-        {
-            options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
-            options.ClaimsIdentity.UserNameClaimType = ClaimTypes.Name;
-            options.ClaimsIdentity.EmailClaimType = ClaimTypes.Email;
-            options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
-        });
+        // services.Configure<IdentityOptions>(options =>
+        // {
+        //     options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
+        //     options.ClaimsIdentity.UserNameClaimType = ClaimTypes.Name;
+        //     options.ClaimsIdentity.EmailClaimType = ClaimTypes.Email;
+        //     options.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
+        // });
 
         // ──────────────────────────
         // Supporting Services
         // ──────────────────────────
+        services.AddDbContext<ReadOnlyApplicationDbContext>(options =>
+        {
+            options.UseNpgsql(
+                configuration.GetConnectionString("ReadReplica"));
+        });
 
+        services.AddScoped<IApplicationReadOnlyDbContext>(
+            provider => provider.GetRequiredService<ReadOnlyApplicationDbContext>());
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();

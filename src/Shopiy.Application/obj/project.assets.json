@@ -430,11 +430,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "f:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
+      "projectUniqueName": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
       "projectName": "Shopiy.Application",
-      "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
+      "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
       "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
-      "outputPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Application\\obj\\",
+      "outputPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -450,8 +450,8 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
-              "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj"
+            "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
+              "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj"
             }
           }
         }

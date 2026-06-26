@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Jil8yBgjpxs=",
+  "dgSpecHash": "xvKLFFh8K6s=",
   "success": true,
-  "projectFilePath": "f:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
+  "projectFilePath": "F:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\jghal\\.nuget\\packages\\automapper\\16.1.1\\automapper.16.1.1.nupkg.sha512",
     "C:\\Users\\jghal\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
@@ -79,9 +79,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'Microsoft.Build.Tasks.Core' 17.14.8 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3q9-fxm7-j8fq",
-      "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
+      "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
       "warningLevel": 1,
-      "filePath": "f:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
+      "filePath": "F:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
       "libraryId": "Microsoft.Build.Tasks.Core",
       "targetGraphs": [
         "net10.0"
@@ -91,9 +91,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'Microsoft.Build.Utilities.Core' 17.14.8 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3q9-fxm7-j8fq",
-      "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
+      "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
       "warningLevel": 1,
-      "filePath": "f:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
+      "filePath": "F:\\Assissment\\shopiy\\src\\Shopiy.Infrastructure\\Shopiy.Infrastructure.csproj",
       "libraryId": "Microsoft.Build.Utilities.Core",
       "targetGraphs": [
         "net10.0"

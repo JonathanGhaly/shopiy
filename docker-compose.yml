@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: shopiy-postgres
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shopiy
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  shopiy-api:
+
+    build:
+      context: .
+      dockerfile: src/Shopiy.Api/Dockerfile
+
+    container_name: shopiy-api
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "5000:8080"
+
+    environment:
+
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+
+      ConnectionStrings__DefaultConnection: >
+        Host=postgres; Port=5432; Database=${POSTGRES_DB}; Username=${POSTGRES_USER}; Password=${POSTGRES_PASSWORD}
+
+      Jwt__Issuer: Shopiy.Api
+      Jwt__Audience: Shopiy.Client
+      Jwt__Secret: ${JWT_SECRET}
+
+volumes:
+  postgres_data:
