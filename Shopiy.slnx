@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Shopiy.Api/Shopiy.Api.csproj" />
+    <Project Path="src/Shopiy.Application/Shopiy.Application.csproj" />
+    <Project Path="src/Shopiy.Domain/Shopiy.Domain.csproj" />
+    <Project Path="src/Shopiy.Infrastructure/Shopiy.Infrastructure.csproj" />
+  </Folder>
+</Solution>

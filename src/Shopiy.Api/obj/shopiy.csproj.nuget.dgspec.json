@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\Assissment\\shopiy\\shopiy.csproj": {}
+    "f:\\Assissment\\shopiy\\src\\Shopiy.Api\\shopiy.csproj": {}
   },
   "projects": {
-    "F:\\Assissment\\shopiy\\shopiy.csproj": {
+    "f:\\Assissment\\shopiy\\src\\Shopiy.Api\\shopiy.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Assissment\\shopiy\\shopiy.csproj",
+        "projectUniqueName": "f:\\Assissment\\shopiy\\src\\Shopiy.Api\\shopiy.csproj",
         "projectName": "shopiy",
-        "projectPath": "F:\\Assissment\\shopiy\\shopiy.csproj",
+        "projectPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Api\\shopiy.csproj",
         "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
-        "outputPath": "F:\\Assissment\\shopiy\\obj\\",
+        "outputPath": "f:\\Assissment\\shopiy\\src\\Shopiy.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"

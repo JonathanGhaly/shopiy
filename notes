@@ -45,3 +45,416 @@ Logout
 Products
 Categories
 Orders
+
+Your structure is much better now. Based on the uploaded directory listing , you've successfully separated the layers into `Shopiy.Api`, `Shopiy.Application`, `Shopiy.Domain`, and `Shopiy.Infrastructure`.
+
+There are still a few things I'd change before implementing the remaining features.
+
+## 1. Create a real solution with four projects (highest priority)
+
+At the moment I only see the folders. Make sure you actually have:
+
+```text
+Shopiy.sln
+
+src/
+├── Shopiy.Api/
+│   └── Shopiy.Api.csproj
+├── Shopiy.Application/
+│   └── Shopiy.Application.csproj
+├── Shopiy.Domain/
+│   └── Shopiy.Domain.csproj
+└── Shopiy.Infrastructure/
+    └── Shopiy.Infrastructure.csproj
+```
+
+If all your code is still being compiled by a single `shopiy.csproj`, you're not getting the dependency boundaries that Clean Architecture is intended to provide.
+
+The project references should be:
+
+```text
+Shopiy.Api
+    ↓
+Shopiy.Infrastructure
+    ↓
+Shopiy.Application
+    ↓
+Shopiy.Domain
+```
+
+---
+
+# 2. Domain
+
+Your Domain layer is almost complete.
+
+```
+Domain
+├── Common
+├── Entities
+└── Enums
+```
+
+I would add:
+
+```text
+Domain
+│
+├── Constants
+│   └── Roles.cs
+│
+├── ValueObjects
+│
+└── Events
+```
+
+For example:
+
+```csharp
+public static class Roles
+{
+    public const string Admin = "Admin";
+    public const string Customer = "Customer";
+}
+```
+
+Then use `Roles.Admin` instead of `"Admin"` everywhere.
+
+---
+
+# 3. Application
+
+I would expand it like this:
+
+```text
+Application
+│
+├── Common
+│
+├── DTOs
+│
+├── Features
+│
+├── DependencyInjection
+│
+└── Mapping
+```
+
+## Missing DTOs
+
+Authentication
+
+```
+RegisterRequest
+LoginRequest
+RefreshTokenRequest
+AuthResponse
+UserDto
+```
+
+Products
+
+```
+ProductDto
+CreateProductRequest
+UpdateProductRequest
+```
+
+Categories
+
+```
+CategoryDto
+```
+
+Orders
+
+```
+OrderDto
+OrderItemDto
+CreateOrderRequest
+```
+
+---
+
+# 4. Authentication
+
+Currently you only have folders.
+
+Eventually it should become
+
+```text
+Authentication
+
+Commands
+
+    Register
+        RegisterCommand
+        RegisterHandler
+        RegisterValidator
+
+    Login
+        LoginCommand
+        LoginHandler
+        LoginValidator
+
+    RefreshToken
+        RefreshTokenCommand
+        RefreshTokenHandler
+
+    Logout
+        LogoutCommand
+        LogoutHandler
+```
+
+---
+
+# 5. Products
+
+```
+Products
+
+Commands
+
+CreateProduct
+
+UpdateProduct
+
+DeleteProduct
+
+Queries
+
+GetProduct
+
+GetProducts
+```
+
+Each folder contains
+
+```
+Command
+
+Handler
+
+Validator
+```
+
+or
+
+```
+Query
+
+Handler
+```
+
+---
+
+# 6. Categories
+
+Exactly the same pattern.
+
+---
+
+# 7. Orders
+
+```
+CreateOrder
+
+UpdateOrderStatus
+
+CancelOrder
+
+GetOrder
+
+GetOrders
+```
+
+---
+
+# 8. Infrastructure
+
+Looks good.
+
+I'd only add
+
+```
+Infrastructure
+
+Repositories
+
+Email
+
+Cache
+
+BackgroundServices
+```
+
+Even if they're empty.
+
+---
+
+# 9. API
+
+You're missing the most important part.
+
+```
+Controllers
+```
+
+Should contain
+
+```
+AuthController
+
+ProductsController
+
+CategoriesController
+
+OrdersController
+```
+
+---
+
+# 10. Middleware
+
+Currently empty.
+
+Need
+
+```
+ExceptionHandlingMiddleware.cs
+
+RequestLoggingMiddleware.cs
+```
+
+---
+
+# 11. Filters
+
+I'd probably remove this folder.
+
+With MediatR + FluentValidation, MVC filters usually aren't needed.
+
+---
+
+# 12. Extensions
+
+Add
+
+```
+SwaggerExtensions.cs
+
+ApplicationBuilderExtensions.cs
+```
+
+to keep `Program.cs` concise.
+
+---
+
+# 13. Swagger
+
+Missing configuration for
+
+* JWT Bearer
+* XML comments
+* Authorization button
+
+---
+
+# 14. Unit Tests
+
+Create
+
+```
+tests
+
+Shopiy.Application.Tests
+
+Shopiy.Infrastructure.Tests
+
+Shopiy.Api.Tests
+```
+
+Even a handful of tests for authentication handlers and product handlers will strengthen the submission.
+
+---
+
+# 15. Docker
+
+I'd add
+
+```
+Dockerfile
+
+docker-compose.yml
+```
+
+with PostgreSQL.
+
+---
+
+# 16. README
+
+A good README should include:
+
+* Architecture
+* Technologies
+* How to run
+* Migrations
+* Default admin credentials
+* API authentication
+* Example requests
+* Project structure
+
+---
+
+# 17. Missing features
+
+The biggest missing functionality is in the Application layer.
+
+### Authentication
+
+* Register
+* Login
+* Refresh Token
+* Logout
+
+### Products
+
+* Create
+* Update
+* Delete
+* Get
+* Get All
+
+### Categories
+
+* Create
+* Update
+* Delete
+* Get
+* Get All
+
+### Orders
+
+* Create
+* Get
+* Get All
+* Update Status
+* Cancel
+
+---
+
+## Overall progress
+
+From the uploaded structure, I'd estimate:
+
+| Layer          | Completion |
+| -------------- | ---------: |
+| Domain         |        95% |
+| Infrastructure |        90% |
+| Application    |        15% |
+| API            |        10% |
+| Testing        |         0% |
+| Documentation  |         5% |
+
+Overall, you're around **50% complete**. The remaining work is concentrated in the Application and API layers. Once you implement the CQRS handlers, validators, DTOs, and controllers, the project will move from an architectural skeleton to a functional application.
