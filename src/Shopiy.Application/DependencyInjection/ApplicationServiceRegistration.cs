@@ -24,7 +24,7 @@ public static class ApplicationServiceRegistration
 
        services.AddAutoMapper(cfg =>
         {
-        }, typeof(ProductProfile).Assembly);
+        }, typeof(ProductProfile).Assembly, typeof(CategoryProfile).Assembly);
 
         return services;
     }

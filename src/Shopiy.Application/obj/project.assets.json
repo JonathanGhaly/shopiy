@@ -425,19 +425,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\jghal\\.nuget\\packages\\": {}
+    "/home/slinga/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
+      "projectUniqueName": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Application/Shopiy.Application.csproj",
       "projectName": "Shopiy.Application",
-      "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\Shopiy.Application.csproj",
-      "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
-      "outputPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Application\\obj\\",
+      "projectPath": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Application/Shopiy.Application.csproj",
+      "packagesPath": "/home/slinga/.nuget/packages/",
+      "outputPath": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Application/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/slinga/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -450,8 +450,8 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
-              "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj"
+            "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj": {
+              "projectPath": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj"
             }
           }
         }
@@ -513,7 +513,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/home/slinga/.dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
