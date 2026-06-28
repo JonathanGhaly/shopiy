@@ -1,34 +1,22 @@
-Small production-style Order Management and Admin Dashboard system.
+# Shopiy: Order Management and Admin Dashboard 
+**Candidate Assessment Architecture & System Design Document**
+
 ## Table of Contents 
-- Requirement
-	- User
-		- [[User/Functional Requirement|Functional Requirement]]
-		- [[User/Non-Functional Requirement|Non-Functional Requirement]]
-	- Admin
-		- [[Admin/Functional Requirement|Functional Requirement]]
-		- [[Admin/Non-Functional Requirement|Non-Functional Requirement]]
-- Database Design & Schema
-	- User Authentication Schema
-	- E-Commerce Schema
-		- Table Design
-		- Schema
-	- Database Connection Configuration
-	- Entity Relationships
-	- Index Inventory
-	- Query Monitoring
-	- Query Performance Targets
-	- Backup and Recovery
-	- "Index Health" Query 
-- [[Backend Architecture]]
-	- API Endpoints
-	- Data Validation Rules
-- [[Frontend Architecture]]
-- [[Continuous Integration & Continuous Deployment (CI-CD)]]
-- [[Docker Setup]]
-- [[Quality Assurance & Testing Plan]]
+1. [Requirements](#requirements)
+2. [Database Design & Schema](#database-design-&-schema) 
+3. [Backend Architecture](#backend-architecture) 
+4. [System Design Scenario: Duplicate Order Prevention](#system-design-scenario-duplicate-order-prevention) 
+5. [Frontend Architecture & CORS](#frontend-architecture--cors) 
+6. [Docker Setup & CI/CD](#docker-setup--cicd) 
+7. [Quality Assurance & Testing Plan](#quality-assurance--testing-plan)
+8. [Logging & Observability Strategy](#logging--observability-strategy)
+
 ---
+
 # Requirements
+
 ## User
+
 ### Functional
 
 - **Browse Product Catalog:** Users can view a paginated list of all active products, with the ability to sort by price and creation date.
@@ -83,6 +71,7 @@ Small production-style Order Management and Admin Dashboard system.
 
 ---
 # Database Design & Schema
+The system utilizes PostgreSQL 17.
 ## User Authentication Schema
 
 **Use ASP.NET Core Identity APIs (Recommended)**
@@ -269,13 +258,11 @@ CREATE INDEX idx_products_metadata_gin ON products USING GIN (metadata);
 **Key business rules**: Store all monetary values as integers in cents to avoid floating-point rounding errors. `order_items.unit_price` captures the price at time of purchase - products may change price later. Decrement `stock_quantity` atomically when order status changes to 'paid'. Orders cannot be cancelled after status changes to 'shipped'. Categories support nesting via `parent_id` for hierarchical product navigation.
 ## Database Connection Configuration
 
-```
-Primary:      postgresql://app_user@primary.rds.amazonaws.com:5432/ridgeline
-Read Replica: postgresql://app_reader@replica.rds.amazonaws.com:5432/ridgeline
-Connection Pool: PgBouncer, max 100 connections, transaction mode
-SSL: Required (verify-full)
-Statement Timeout: 30 seconds (application), 5 minutes (migrations)
-```
+In the local development environment, database connections utilize Docker-compose virtual bridge networks. Connection parameters are securely injected at runtime using environment variables.
+
+- **Primary Connection String:** Maps dynamically inside the API container to: `Host=postgres; Port=5432; Database=${POSTGRES_DB}; Username=${POSTGRES_USER}; Password=${POSTGRES_PASSWORD}`
+    
+- **Topology:** The local stack targets a single-node PostgreSQL 17 engine instance (`shopiy-postgres`).
 ## Entity Relationships
 
 ```
@@ -335,188 +322,47 @@ users (AspNetUsers root)
 ---
 # API Endpoints
 
-Below is the formal API specification designed to fulfill the application's functional requirements. The API is versioned (`/api/v1/`) and utilizes standard HTTP methods and status codes.
-### Authentication & Authorization
+The API is fully documented via OpenAPI/Swagger 3.0.4. It is versioned (`/api/v1/`) and utilizes standard HTTP methods, status codes, and JWT Bearer token authentication.
+### Authentication (`/api/v1/auth`)
 
-Authentication is handled via ASP.NET Core Identity APIs, returning JWTs.
+Authentication is handled via ASP.NET Core Identity. All endpoints return standardized `ProblemDetails` (RFC 7807) on `400 Bad Request` or `401/403 Unauthorized` errors.
 
-- **Public Endpoints:** No authentication required.
-- **User Endpoints:** Require a valid JWT (`Authorization: Bearer <token>`).
-- **Admin Endpoints:** Require a valid JWT with the `Admin` role claim.
+* **`POST /api/v1/auth/register`**: Registers a new user. 
+	* **Payload:** `{ "fullName": "string", "email": "string", "password": "...", "confirmPassword": "..." }` 
+	* **Response (201):** `AuthResponse` containing `accessToken`, `refreshToken`, `expiresAt`, and `UserDto`. 
+* **`POST /api/v1/auth/login`**: Authenticates a user and issues a JWT. 
+	* **Payload:** `{ "email": "string", "password": "string" }`
+	* **Response (200):** `AuthResponse`. 
+* **`POST /api/v1/auth/refresh`**: Refreshes an expired JWT using a valid refresh token (usually passed securely via cookies). 
+	* **`POST /api/v1/auth/logout`**: Invalidates the current session/tokens (Returns `204 No Content`).
+### Categories (`/api/v1/Categories`)
+* **`GET /api/v1/Categories`**: Retrieves the category tree. 
+* **`POST /api/v1/Categories`** *(Admin)*: Creates a new category. 
+	* **Payload:** `{ "name": "string", "description": "string", "parentId": "uuid", "sortOrder": 0 }` 
+* **`GET /api/v1/Categories/{slugOrId}`**: Retrieves a specific category by its UUID or URL-friendly slug.
+* **`PUT /api/v1/Categories/{id}`** *(Admin)*: Updates a category. 
+* **`DELETE /api/v1/Categories/{id}`** *(Admin)*: Deletes a category.
+### Products (`/api/v1/Products`)
+* **`GET /api/v1/Products`**: Retrieves a paginated list of products. 
+	* **Query Parameters:** `page` (default: 1), `limit` (default: 20), `sort` (string), `categoryId` (uuid). 
+* **`POST /api/v1/Products`** *(Admin)*: Adds a new product to the catalog. 
+	* **Payload:** ```json { "name": "string", "description": "string", "price": 0.0, "stockQuantity": 0, "sku": "string", "currency": "EGP", "isActive": true, "metadata": {}, "categoryIds": ["uuid"] } ``` 
+* **`GET /api/v1/Products/{slugOrId}`**: Retrieves comprehensive product details by UUID or slug. 
+* **`PUT /api/v1/Products/{id}`** *(Admin)*: Updates an existing product's details and inventory. 
+* **`DELETE /api/v1/Products/{id}`** *(Admin)*: Soft-deletes or removes a product.
+### Orders & Checkout (`/api/v1/Orders`)
 
-### Product Catalog (Public)
-#### 1. Browse Product Catalog
-
-Retrieves a paginated list of active products. Hidden or soft-deleted products are automatically excluded.
-- **Endpoint:** `GET /api/v1/products`
-- **Auth:** Public
-- **Query Parameters:**
-    - `page` (int, default: 1)
-    - `limit` (int, default: 20)
-    - `sort` (string) - Options: `price_asc`, `price_desc`, `newest`
-    - `categoryId` (uuid, optional)
-- **Response (200 OK):**
-```JSON
-{
-  "data": [
-    {
-      "id": "e2b5c... ",
-      "name": "High-Performance Compute Node",
-      "slug": "high-performance-compute-node",
-      "price": 450000, 
-      "currency": "EGP",
-      "stockQuantity": 12
-    }
-  ],
-  "meta": {
-    "totalItems": 142,
-    "currentPage": 1,
-    "totalPages": 8
-  }
-}
-```
-
-#### 2. View Product Profile
-
-Fetches comprehensive details for a single product using its URL-friendly slug.
-- **Endpoint:** `GET /api/v1/products/{slug}`
-- **Auth:** Public
-- **Response (200 OK):**
-``` JSON
-{
-  "id": "e2b5c...",
-  "name": "High-Performance Compute Node",
-  "sku": "HPC-NODE-01",
-  "description": "...",
-  "price": 450000,
-  "stockQuantity": 12,
-  "metadata": {
-    "cores": 64,
-    "ram": "256GB"
-  },
-  "categories": [
-    { "id": "...", "name": "Servers", "slug": "servers" }
-  ]
-}
-```
-
-### Customer Checkout & History (User)
-#### 3. Checkout & Order Creation
-Converts a user's cart into a formal, immutable order. The backend calculates all monetary totals using secure database prices to prevent client-side manipulation.
-- **Endpoint:** `POST /api/v1/orders`
-- **Auth:** Requires JWT (User)
-- **Request Body:**
-``` JSON
-{
-  "items": [
-    { "productId": "uuid", "quantity": 2 }
-  ],
-  "shippingAddress": {
-    "street": "123 Main St",
-    "city": "Cairo",
-    "postalCode": "11511",
-    "country": "Egypt"
-  },
-  "billingAddress": {
-    "street": "123 Main St",
-    "city": "Cairo",
-    "postalCode": "11511",
-    "country": "Egypt"
-  },
-  "notes": "Please leave at the reception."
-}
-```
-
-- **Response (201 Created):** Returns the immutable confirmation summary.
-
-``` JSON
-{
-  "orderId": "a1b2c3d4...",
-  "status": "pending",
-  "subtotal": 900000,
-  "tax": 126000,
-  "shipping": 5000,
-  "total": 1031000,
-  "placedAt": "2026-06-25T01:09:56Z"
-}
-```
-
-#### 4. Purchase History
-
-Retrieves the authenticated user's past orders and invoices.
-- **Endpoint:** `GET /api/v1/user/orders`
-- **Auth:** Requires JWT (User)
-- **Response (200 OK):** Array of order summaries with nested `items` arrays detailing historical purchase prices.
-### Admin Dashboard (Protected)
-
-#### 5. Global Order Oversight
-Provides administrators with a master view of platform-wide orders. Used to populate the primary dashboard tables.
-- **Endpoint:** `GET /api/v1/admin/orders`
-- **Auth:** Requires JWT (`Role: Admin`)
-- **Query Parameters:**
-    - `status` (string, optional) - e.g., `pending`, `shipped`
-    - `page`, `limit` (pagination)
-- **Response (200 OK):**
-``` JSON
-{
-  "data": [
-    {
-      "orderId": "uuid",
-      "customerEmail": "user@example.com",
-      "status": "pending",
-      "total": 1031000,
-      "placedAt": "2026-06-25T14:30:00Z"
-    }
-  ],
-  "meta": { "totalItems": 45, "pendingCount": 12 }
-}
-```
-
-#### 6. Order Profile Diagnostics
-
-Fetches the absolute details of an individual order, exposing exact line-item costs, fulfillment timestamps, and unredacted customer notes for administrative review.
-- **Endpoint:** `GET /api/v1/admin/orders/{id}`
-- **Auth:** Requires JWT (`Role: Admin`)
-- **Response (200 OK):** Comprehensive JSON matching the exact schema definition of the `orders` and `order_items` tables.
-#### 7. Status Lifecycle Updates
-
-Allows administrators to push orders through the fulfillment pipeline.
-- **Endpoint:** `PATCH /api/v1/admin/orders/{id}/status`
-- **Auth:** Requires JWT (`Role: Admin`)
-- **Request Body:**
-``` JSON
-{
-  "status": "paid" 
-}
-```
-
-- **Response (200 OK):**
-
-```  JSON
-{
-  "message": "Order status successfully updated.",
-  "orderId": "uuid",
-  "newStatus": "paid",
-  "updatedAt": "2026-06-25T15:00:00Z"
-}
-```
-
-- **Validation Notes:**
-    
-    - Transitioning to `paid` triggers an atomic transaction deducting `quantity` from `products.stock_quantity`.
-    
-    - Attempting to transition a `shipped` or `delivered` order to `cancelled` will result in a `409 Conflict` error.
-#### Error Response Format
-
-```json
-{
-  "error": {
-    "code": "MACHINE_READABLE_CODE",
-    "message": "Human-readable explanation",
-    "details": {}
-  }
-}
-```
+* **`GET /api/v1/Orders`**: 
+	* *User Context:* Retrieves the authenticated user's order history. 
+	* *Admin Context:* Retrieves a platform-wide paginated list of all orders. 
+* **`POST /api/v1/Orders`**: Converts a user's cart into a formal order. Financial totals are calculated server-side. 
+	* **Payload (`CreateOrderRequest`):** ```json { "items": [ { "productId": "uuid", "quantity": 1 } ], "shippingAddress": { "street": "string", "city": "string", "postalCode": "string", "country": "string" }, "billingAddress": { "street": "string", "city": "string", "postalCode": "string", "country": "string" }, "notes": "string" } ``` 
+* **`GET /api/v1/Orders/{id}`**: Retrieves exact details, addresses, and line items for a specific order UUID. 
+* **`PUT /api/v1/Orders/{id}/status`** *(Admin)*: Progresses an order through the fulfillment pipeline. 
+	* **Payload:** `{ "status": "Confirmed" }` 
+	* **Validation:** Status MUST be exactly one of: `Pending`, `Confirmed`, `Processing`, `Shipped`, `Delivered`, `Cancelled`.
+### Standardized Error Responses
+The API utilizes standard HTTP status codes and returns error details in the RFC 7807 `ProblemDetails` format. This ensures front-end clients can predictably parse and handle application failures.
 
 | Code             | Status | When                             |
 | ---------------- | ------ | -------------------------------- |
@@ -528,6 +374,7 @@ Allows administrators to push orders through the fulfillment pipeline.
 | CONFLICT         | 409    | Duplicate resource               |
 | RATE_LIMITED     | 429    | 100/min auth, 20/min login       |
 | INTERNAL_ERROR   | 500    | Unexpected server error          |
+|                  |        |                                  |
 
 ## Data Validation Rules
 ### 1. Authentication & User Management
@@ -562,13 +409,13 @@ Allows administrators to push orders through the fulfillment pipeline.
 
 ### 4. Order & Checkout Processing
 
-|**Field**|**Validation Rule (API / FluentValidation)**|**Database Enforcement**|
-|---|---|---|
-|**Order Status**|Must be strictly one of: `pending`, `paid`, `shipped`, `delivered`, `cancelled`, `refunded`.|`CHECK (status IN (...))`|
-|**Item Quantity**|Required. Integer `> 0`. A cart cannot contain 0 or negative items.|`CHECK (quantity > 0)`|
-|**Financial Totals**|`subtotal`, `tax`, `shipping`, and `total` must all be mathematically valid integers `>= 0`.|`INTEGER NOT NULL`|
-|**Addresses**|`shipping_address` and `billing_address` must contain required properties: `street` (string), `city` (string), `country` (string).|`JSONB NOT NULL`|
-|**Order Notes**|Optional. Max 1000 characters. HTML tags stripped to prevent XSS.|`TEXT`|
+| **Field**            | **Validation Rule (API / FluentValidation)**                                                                                       | **Database Enforcement**  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| **Order Status**     | Must be strictly one of: `pending`, `paid`, `shipped`, `delivered`, `cancelled`, `refunded`.                                       | `CHECK (status IN (...))` |
+| **Item Quantity**    | Required. Integer `> 0`. A cart cannot contain 0 or negative items.                                                                | `CHECK (quantity > 0)`    |
+| **Financial Totals** | `subtotal`, `tax`, `shipping`, and `total` must all be mathematically valid integers `>= 0`.                                       | `INTEGER NOT NULL`        |
+| **Addresses**        | `shipping_address` and `billing_address` must contain required properties: `street` (string), `city` (string), `country` (string). | `JSONB NOT NULL`          |
+| **Order Notes**      | Optional. Max 1000 characters. HTML tags stripped to prevent XSS.                                                                  | `TEXT`                    |
 
 ## Cross-Cutting Security Rules
 
@@ -579,24 +426,6 @@ Allows administrators to push orders through the fulfillment pipeline.
 - **Pagination Limits:** Query parameters for `limit` or `pageSize` must be strictly bounded between `1` and `100` to prevent database Denial of Service (DoS) attacks via massive data pulls.
     
 - **Immutable Totals:** Order totals (`unit_price`, `subtotal`, `total`) submitted by the client must be completely ignored. The backend must independently recalculate these values by querying the `products` table directly during the checkout transaction.
-### Migration History
-Use EF Core (for migration and Entity Management)
-
-| Version | Date       | Description                                         | Reversible | Status  |
-| ------- | ---------- | --------------------------------------------------- | ---------- | ------- |
-| v001    | 2026-06-10 | Initialize ASP.NET Core Identity Core System Tables | Yes        | Applied |
-| v002    | 2026-06-12 | Add Products, Categories, and Product Junctions     | Yes        | Applied |
-| v003    | 2026-06-15 | Add Orders and Order Line Items Architecture        | Yes        | Applied |
-| v004    | 2026-06-18 | Inject GIN indexes on dynamic product metadata maps | Yes        | Applied |
-| v005    | 2026-06-22 | Add soft-deletion index configurations to Products  | Yes        | Applied |
-
-```bash
-pnpm db:migrate:status           # Check current migration status
-pnpm db:migrate:create --name X  # Create a new migration file
-pnpm db:migrate                  # Apply all pending migrations
-pnpm db:migrate:rollback         # Rollback the last applied migration
-pnpm db:reset                    # Drop all, re-migrate, re-seed (DEV ONLY)
-```
 
 ## Query Monitoring
 
@@ -667,169 +496,262 @@ AND tc.table_schema = 'public';
 
 --- 
 
+
 # Backend Architecture
-## Technology Used:
-- ASP.NET
-- Redis
-- PostgreSql
 
-To scale seamlessly, the backend uses **Clean Architecture (Onion Architecture)** combined with the **CQRS (Command Query Responsibility Segregation)** pattern via MediatR. This decouples business workflows from EF Core data-access logic.
+## Technology Stack
 
----
+* **Framework:** ASP.NET Core
+* **Database:** PostgreSQL (with Entity Framework Core)
+* **Caching:** Redis
+* **Design Paradigm:** Clean Architecture (Onion Architecture)
+
+To ensure seamless scalability and maintainability, the backend strictly adheres to **Clean Architecture**. This is combined with the **CQRS (Command Query Responsibility Segregation)** pattern via **MediatR**, effectively decoupling core business workflows from Entity Framework Core data-access logic and network routing.
+
 ## Directory Structure
 
+The solution is divided into four distinct projects to enforce dependency rules:
+
+```text
 Solution: EcommercePlatform/
-  ├── 1. Domain/           # Enterprise logic: Entities, Value Objects, Domain Exceptions
-  ├── 2. Application/      # Use Cases: CQRS (Commands/Queries), DTOs, FluentValidation
-  ├── 3. Infrastructure/   # Data Access: ApplicationDbContext (Identity), JWT, Repositories
-  └── 4. WebAPI/           # Presentation: Controllers, Middleware, SignalR, Program.cs
-  
----
+  ├── 1. Shopiy.Domain/           # Enterprise logic: Entities, Value Objects, Domain Exceptions
+  ├── 2. Shopiy.Application/      # Use Cases: CQRS (Commands/Queries), DTOs, FluentValidation
+  ├── 3. Shopiy.Infrastructure/   # Data Access: ApplicationDbContext (Identity), JWT, Repositories
+  └── 4. Shopiy.Api/           # Presentation: Controllers, Middleware, SignalR, Program.cs
+
+```
+
 ## Architectural Layer Responsibilities
 
 ### 1. Domain Layer (Zero Dependencies)
 
-Contains raw business data logic.
+The innermost layer. It contains the raw, fundamental business data logic and strictly has no dependencies on any external libraries or frameworks.
 
-- **Entities:** `Product`, `Category`, `Order`, `OrderItem`. Your `ApplicationUser` inherits from `IdentityUser<Guid>`.
+* **Entities:** Core mutable objects with distinct identities (`Product`, `Category`, `Order`, `OrderItem`). The `ApplicationUser` inherits from `IdentityUser<Guid>`.
+* **Value Objects:** Immutable structured data types (e.g., an `Address` object used to map the `shipping_address` and `billing_address` JSONB columns).
 
-- **Value Objects:** `Address` (handles immutable structured data inside your `shipping_address` and `billing_address` JSONB columns).
+### 2. Application Layer (Depends *only* on Domain)
 
-### 2. Application Layer (Depends _only_ on Domain)
+Houses all business operational commands and use cases. It defines *what* the application does without worrying about *how* data is stored or presented.
 
-Houses business operational commands.
+* **CQRS Framework (MediatR):** Segregates writing data from reading data.
+* *Commands (Write):* State-altering operations (e.g., `CreateOrderCommand`, `UpdateProductStockCommand`) that force atomic database transactions.
+* *Queries (Read):* Side-effect-free data retrieval (e.g., `GetActiveProductsQuery`), heavily optimized for read replicas or lean projections.
 
-- **CQRS Framework:** Segregates writing data from reading data.
 
-    - _Commands (Write):_ `CreateOrderCommand`, `UpdateProductStockCommand` (forces atomic database work).
-    
-    - _Queries (Read):_ `GetActiveProductsQuery` (targets read replicas or direct lean projections).
+* **Validation Pipeline:** Utilizes `FluentValidation` to run strict input logic across request schemas before they ever reach the handlers.
 
-- **Validation:** Pipeline behaviors run input logic across your request schemas before hitting handlers.
 ### 3. Infrastructure Layer (Depends on Application & Domain)
 
-Handles physical data serialization and third-party integrations.
+Handles the physical data serialization, third-party integrations, and external I/O.
 
-- **Identity Context:** Core persistence layer inheriting from `IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>`.
+* **Identity & Persistence:** The core data access layer inheriting from `IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>`.
+* **Read/Write DB Splitting:** Implements a factory pattern to configure distinct connection pools—routing write operations to the Primary RDS and offloading tracking-free read queries to the Replica.
+* **Services:** Implementations for JWT generation, caching mechanisms (Redis), and email delivery.
 
-- **Read/Write DB Splitting:** Houses the factory pattern configuring distinct connection pools for write endpoints (Primary RDS) and tracking-free read queries (Replica).
+### 4. API Layer (The Entry Point)
 
-### 4. WebAPI Layer (The Entry Point)
+The outermost presentation layer. It acts as the gateway, translating network transport envelopes (HTTP requests) into application-layer structures.
 
-Translates network transport envelopes into application-layer structures.
+* **Controllers:** Lean routing endpoints that do little more than execute standard `MediatR.Send()` operations and return HTTP status codes.
 
-- **Controllers:** Lean routing files executing standard `MediatR.Send(command)` operations.
+* **Custom Middleware:** Centralized Global Exception Handlers that intercept unexpected errors and map them down into the platform's standardized JSON `Error Response Format`.
+---
+## System Design Scenario: Duplicate Order Prevention
 
-- **Custom Middleware:** Centralized Global Exception Handlers that map unexpected exceptions down into your documented `Error Response Format`.
+To satisfy the non-functional reliability requirements and guarantee absolute processing safety if a client triggers duplicate requests (e.g., double-clicking checkout), the architecture enforces an **Idempotency Strategy** using Redis.
+
+### 1. The Idempotency Contract
+
+- Every checkout request must attach a unique V4 UUID passed via headers: `X-Idempotency-Key`.
+- The API utilizes an `[IdempotentRequest]` Action Filter to intercept the request before execution.
+
+### 2. High-Performance Atomic Locking
+
+- The filter executes a single, atomic Redis command (`StringSetAsync` with `When.NotExists`) to acquire a processing lock with a 5-minute TTL.
+    
+- **Cache Hit (Duplicate):** If the key exists, the request is intercepted. If the previous request is still processing, a `409 Conflict` is returned. If the previous request completed successfully, the filter **replays the cached JSON response** directly to the client.
+### 3. Downstream Failure Recovery
+
+- If the downstream database fails, throws an exception, or returns a 4xx/5xx error, the filter catches the failure and **evicts the Redis key**. This prevents the "Failure Lockout Trap" and allows the user to correct their input and retry immediately.
 ---
 # Frontend Architecture
-## Technology Used:
-- React
+> [!WARNING]
+> **CORS Security Alignment:** To satisfy the Non-Functional Requirement mandating secure `HttpOnly` cookie-based authentication, the API presentation layer must be refactored to remove `.AllowAnyOrigin()` from `Program.cs`. It must explicitly list your frontend client URL (e.g., `http://localhost:8081` from your frontend port configurations) and include `.AllowCredentials()` to allow secure browser cookie transmission.
+## Technology Stack
 
-The frontend uses a **Feature-Based (Domain-Driven) Architecture**. Rather than grouping files by technical identity (e.g., placing all components in one folder, all hooks in another), everything belonging to a standalone business domain is collocated inside a feature container.
+* **Core Framework:** React with TypeScript
+* **Build Tool:** Vite
+* **Styling & UI:** TailwindCSS, Lucide React (Icons)
+* **Server State & Data Fetching:** TanStack Query (React Query), Axios
+* **Client State Management:** Zustand
+* **Routing:** React Router DOM
 
----
+To maintain a scalable and highly modular codebase, the frontend strictly implements a **Feature-Based (Domain-Driven) Architecture**. Instead of globally grouping all application hooks or all API calls into massive shared folders, code is isolated into self-contained business domains. This closely mirrors the separation of concerns found in your backend's Clean Architecture.
+
 ## Directory Structure
 
-frontend/src/
-  ├── assets/              # Global image templates, static SVG icons, branding
-  ├── components/          # Shared global cross-cutting UI items (Buttons, Input, Table)
-  ├── config/              # Global Axios clients, route definitions, environment keys
-  ├── context/             # Global low-frequency contexts (Theme, Localization)
-  ├── features/            # Self-contained business domains 
-  │   ├── auth/            # Login, Registration components, API hooks, state slices
-  │   ├── catalog/         # Product lists, detail items, category dynamic trees
-  │   ├── checkout/        # Shopping carts, checkout steps, address verification
-  │   └── admin/           # Order management metrics, tracking updates, dashboards
-  ├── hooks/               # Global generic custom utility hooks (useDebounce, useMediaQuery)
-  ├── store/               # Zustand state engine for micro global states (e.g., Cart store)
-  └── App.tsx              # Base router orchestration root
+```text
+src/
+├── components/          # Shared global UI components (MainLayout, ProductCard, CartDrawer)
+├── config/              # Global library configurations (axios.ts, queryClient.ts, env.ts)
+├── features/            # Self-contained business domains
+│   ├── admin/           # Dashboard, product/category forms, and order oversight
+│   ├── auth/            # Login, registration, and session management
+│   ├── catalog/         # Product listing, search, and category browsing
+│   └── checkout/        # Cart management, order creation, and purchase history
+├── router/              # AppRouter orchestration and ProtectedRoute logic
+├── services/            # Base API service definitions
+├── store/               # Zustand global state slices (authStore, cartStore, uiStore)
+├── types/               # Global TypeScript definitions (api.ts, common.ts)
+└── utils/               # Pure utility functions (jwt.ts, formatDate.ts, validators.ts)
 
----
+```
+
+## Feature Module Anatomy
+
+Each domain inside the `features/` directory acts as its own micro-application. For example, looking inside `src/features/catalog/`, the domain is completely encapsulated:
+
+* `api/`: Axios network calls strictly related to the catalog (e.g., `getProducts.ts`, `searchProducts.ts`).
+* `hooks/`: Custom React Query hooks encapsulating those API calls for UI consumption (e.g., `useProducts.ts`).
+* `pages/`: Route-level component views (e.g., `CatalogPage.tsx`, `ProductPage.tsx`).
+* `types.ts`: TypeScript interfaces strictly related to the catalog models.
+
 ## Key Frontend Implementation Patterns
 
-- **Secure Network Calls:** The Axios wrapper is configured globally with `withCredentials: true`. This forces the browser to silently attach the HTTP-Only refresh token cookie on backend token rotation checks without exposing it to local JS memory.
-
-- **State Separation:** Use local component state (`useState`) for UI-only toggles (e.g., "is dropdown open?"). Use lightweight global stores like **Zustand** or **Redux Toolkit** strictly for transactional global states (e.g., items added to the shopping cart, authenticated user profile records).
-
-- **Performance Control:** Catalog queries implement debounced filtering states to keep search queries clean and prevent unoptimized frontend typing streams from overwhelming backend API indices.
+* **Server State vs. Client State:** The architecture enforces a strict boundary between UI state and server data. **TanStack Query** (`queryClient.ts`) handles all asynchronous caching, background synchronization, and loading states for backend data. **Zustand** (`src/store/`) is reserved purely for synchronous, global client state (e.g., toggling the UI state in `uiStore.ts` or managing the active session in `authStore.ts`).
+* **Secure Interceptors:** The `src/config/axios.ts` configuration acts as the network backbone, automatically attaching JWTs to outgoing requests and seamlessly handling token rotation using your backend's refresh token endpoints.
+* **Route Protection & RBAC:** The `router/ProtectedRoute.tsx` component acts as the gateway layer. It integrates with your authentication utilities (`jwt.ts` and `authStore.ts`) to evaluate claims—blocking unauthenticated users from the `checkout` routes and completely securing the `admin` feature module from standard customer accounts.
+* **Optimized Tooling:** By leveraging **Vite** alongside esbuild, the application benefits from instant Hot Module Replacement (HMR) during development and highly optimized, chunk-split static assets for production deployment via Nginx.
 ---
+
 # Continuous Integration & Continuous Deployment (CI/CD)
-Our deployment lifecycle is fully automated using **GitHub Actions**. The pipeline is split into two primary workflows: **CI (Validation)** and **CD (Delivery)**.
 
----
-## 1. CI Pipeline: Pull Request Validation
+Our deployment lifecycle is fully automated using **GitHub Actions**. To ensure optimal execution times and strict separation of concerns, the pipeline is split into distinct workflows for the frontend and backend. Every pull request or push targeting the `main` or `master` branches triggers these pipelines. Code cannot be safely merged unless all checks pass.
 
-Every pull request targeting the `main` branch triggers the CI pipeline. Code cannot be merged unless all checks pass.
+## 1. CI Pipeline: Backend Validation (`ci.yml`)
 
-- **Linting & Formatting:** * Frontend: Runs `pnpm lint` (ESLint) and Prettier checks.
-    
-    - Backend: Runs `dotnet format --verify-no-changes`.
-        
-- **Automated Testing:** Executes all Unit and Integration tests (see Testing Plan below).
-    
-- **Build Verification:** Compiles the .NET binaries and Vite frontend bundle to ensure there are no compilation errors.
+The backend pipeline is designed to build and thoroughly test the .NET 10 application in an environment that closely mirrors production.
 
----
-## 2. CD Pipeline: Production Deployment
+* **Ephemeral Service Containers:** Before testing begins, the pipeline automatically spins up dedicated `postgres:17` and `redis:7-alpine` Docker containers. This ensures integration tests have access to real data stores rather than relying solely on in-memory mocks.
 
-When code is merged into the `main` branch, the CD pipeline automatically builds and deploys the new version.
 
-1. **Version Bump:** Automatically tags the release based on semantic versioning.
-    
-2. **Docker Build & Push:**
-    
-    - Builds the `ecommerce-api` and `ecommerce-frontend` Docker images.
-        
-    - Pushes the images to a container registry (e.g., AWS ECR or Docker Hub).
-        
-3. **Database Migrations:** Runs `dotnet ef database update` against the production database.
-    
-4. **Rolling Update:** Signals the production server to pull the latest images and restart the containers with zero downtime (via Docker Swarm or Kubernetes rolling updates).
----
-## Sample GitHub Actions Workflow 
-(`.github/workflows/main.yml`) 
+* **Build & Restore:** Utilizes the modern `Shopiy.slnx` solution file to restore dependencies and compile the application in `Release` mode.
+
+
+* **Automated Testing:** Executes all unit and integration tests across the solution to verify business logic and data persistence.
 
 ```yaml
-name: E-Commerce CI/CD
+# .github/workflows/ci.yml
+name: Backend CI Pipeline
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  build-and-test:
+    name: Build & Test (.NET Core)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: shopiy_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore Shopiy.slnx
+
+      - name: Build Solution
+        run: dotnet build Shopiy.slnx --configuration Release --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test Shopiy.slnx --configuration Release --no-build --verbosity normal
+
+```
+
+## 2. CI Pipeline: Frontend Validation (`ci-frontend.yml`)
+
+The frontend pipeline guarantees that the React application remains structurally sound and that there are no compilation errors during the bundling process.
+
+* **Environment Setup:** Provisions a Node.js v20 environment and leverages `npm` caching via `package-lock.json` to significantly speed up dependency installation.
+
+* **Clean Installation:** Runs `npm ci` to strictly adhere to the lockfile, preventing unexpected package version drifts.
+
+* **Build Verification:** Executes `npm run build` (via Vite) to compile the TypeScript code and verify that the production bundle can be generated without errors.
+
+```yaml
+# .github/workflows/ci-frontend.yml
+name: Frontend CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main, master ]
 
 jobs:
-  build-and-test-backend:
+  build-and-verify:
+    name: Build & Verify (Node/Vite)
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with: { dotnet-version: '8.0.x' }
-    - name: Restore dependencies
-      run: dotnet restore ./backend
-    - name: Build
-      run: dotnet build ./backend --no-restore
-    - name: Test
-      run: dotnet test ./backend --no-build --verbosity normal
 
-  build-and-test-frontend:
-    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with: { node-version: '20' }
-    - name: Install pnpm
-      run: npm install -g pnpm
-    - name: Install dependencies
-      run: pnpm install --prefix ./frontend
-    - name: Lint and Test
-      run: |
-        pnpm lint --prefix ./frontend
-        pnpm test --prefix ./frontend
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Compile and Verify Build
+        run: npm run build
+
 ```
+
+## 3. CD Pipeline: Production Deployment (Planned Architecture)
+
+*(Note: Currently orchestrated manually or via external triggers, with plans to integrate directly into GitHub Actions.)*
+
+When code is successfully verified and merged into the `main` branch, the Continuous Deployment strategy executes the following sequence:
+
+1. **Docker Build & Push:** Compiles the `ecommerce-api` and `ecommerce-frontend` Docker images and pushes them to a secure container registry.
+2. **Database Migrations:** Applies any pending Entity Framework migrations against the production PostgreSQL database.
+3. **Rolling Update:** Instructs the host server to pull the latest images and restart the containers with zero downtime.
 ---
 # Docker Setup
 This multi-container setup mirrors your production ecosystem locally. It configures the ASP.NET Core Web API, the React frontend (compiled via Node and served over Nginx), and a PostgreSQL database instance.
@@ -837,115 +759,100 @@ This multi-container setup mirrors your production ecosystem locally. It configu
 ---
 ## docker-compose.yml
 ``` yaml
-version: '3.8'
-
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: ecommerce_db
-    environment:
-      POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: SecureDevPassword123!
-      POSTGRES_DB: ecommerce_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app_user -d ecommerce_dev"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: ecommerce_redis
-    command: redis-server --save 60 1 --loglevel warning
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  postgres:
+    image: postgres:17
+    container_name: shopiy-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shopiy
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  seq:
-    image: datalust/seq:latest
-    container_name: ecommerce_seq
-    environment:
-      ACCEPT_EULA: Y
-    ports:
-      - "5341:80"   # Port 5341 mapped to 80 (Seq UI and ingestion port)
-    volumes:
-      - seq_data:/data
+  redis:
+    image: redis:7-alpine
+    container_name: shopiy-redis
+    restart: always
+    ports:
 
-  api:
-    image: ecommerce-api:latest
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: ecommerce_api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__Primary=Host=db;Port=5432;Database=ecommerce_dev;Username=app_user;Password=SecureDevPassword123!;
-      - ConnectionStrings__Redis=redis:6379,abortConnect=false
-      - Logging__Seq__ServerUrl=http://seq:80
-    ports:
-      - "5000:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      seq:
-        condition: service_started
+      - "6379:6379"
 
-  frontend:
-    image: ecommerce-frontend:latest
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ecommerce_frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - api
+  
+
+  seq:
+    image: datalust/seq:latest
+    container_name: shopiy-seq
+    restart: always
+    ports:
+      - "5341:80"
+    environment:
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD}
+      ACCEPT_EULA: Y
+    volumes:
+      - seq_data:/data
+  shopiy-api:
+    build:
+      context: .
+      dockerfile: src/Shopiy.Api/Dockerfile
+    container_name: shopiy-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      seq:
+        condition: service_started
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: >
+        Host=postgres; Port=5432; Database=${POSTGRES_DB}; Username=${POSTGRES_USER}; Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379
+      Seq__ServerUrl: http://seq:5341
+      Jwt__Issuer: Shopiy.Api
+      Jwt__Audience: Shopiy.Client
+      Jwt__Secret: ${JWT_SECRET}
 
 volumes:
-  postgres_data:
-  redis_data:
-  seq_data:
+  postgres_data:
+  seq_data:
 ```
 
 --- 
 ## Backend Multi-Stage `Dockerfile` (ASP.NET Core)
 
 ``` DockerFile
-# Build Stage
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
-COPY ["src/WebAPI/WebAPI.csproj", "WebAPI/"]
-COPY ["src/Application/Application.csproj", "Application/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
-COPY ["src/Domain/Domain.csproj", "Domain/"]
-RUN dotnet restore "WebAPI/WebAPI.csproj"
+COPY . .
+WORKDIR /src/src/Shopiy.Api
 
-COPY src/ .
-WORKDIR "/src/WebAPI"
-RUN dotnet build "WebAPI.csproj" -c Release -o /app/build
+RUN dotnet restore Shopiy.Api.csproj
 
-# Publish Stage
-FROM build AS publish
-RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish Shopiy.Api.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
 
-# Runtime Stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+COPY --from=build /app/publish .
+
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "WebAPI.dll"]
+
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet","Shopiy.Api.dll"]
 ```
 
 ---
@@ -967,6 +874,20 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
+```
+## docker-compose.yml
+``` yaml
+services:
+  shopiy-frontend:
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Shopiy}
+    image: shopiy-frontend:latest
+    ports:
+      - "${SHOPIY_FRONTEND_PORT:-8081}:80"
+    restart: unless-stopped
 ```
 
 ---
@@ -1009,310 +930,19 @@ E2E tests take the longest to run, so they are reserved exclusively for "make or
     
 3. **Authentication Security:** Verifies that a locked-out user (5 failed attempts) sees the correct error message and cannot log in.
 ---
-# Application Logging Strategy & Standards
-
-This document defines the logging architecture for the e-commerce platform using **ASP.NET Core**, **Serilog**, and **Seq**. It outlines our structured logging philosophy, strict rules on data hygiene, and practical implementation standards for .NET developers.
-
-## 1. Structured Logging Philosophy
-
-We utilize **Structured Logging** (Semantic Logging). Instead of writing flat text strings to a file, we emit machine-readable event objects with named properties. This allows tools like Seq to instantly filter, aggregate, and alert on specific variables (e.g., finding all errors where `UserId == "123"` and `Total > 5000`).
-
-**The Golden Rule:** Never use C# string interpolation (`$""`) for log messages. Always use Serilog's message templates.
-
-- **Bad (Flat Text):** `_logger.LogInformation($"Order {order.Id} created by user {userId}");`
-    
-- **Good (Structured):** `_logger.LogInformation("Order {OrderId} created by user {UserId}", order.Id, userId);`
-    
-
-## 2. What to Log (And What Not To)
-
-### Required Log Events
-
-Capture these events to ensure auditability, debugging, and performance monitoring:
-
-1. **Authentication & Security (Audit Trail):**
-    
-    - Successful logins and failed login attempts (include IP address and email, but **never** the password).
-        
-    - Account lockouts (e.g., 5 failed attempts).
-        
-    - Role changes or admin actions (e.g., Admin changing an order status to `cancelled`).
-        
-2. **Critical Business Transactions:**
-    
-    - Order creation (Include `OrderId`, `UserId`, `Total`, and `ItemCount`).
-        
-    - Inventory adjustments (Include `ProductId`, `OldQuantity`, `NewQuantity`).
-        
-    - Payment state transitions (`pending` -> `paid`).
-        
-3. **System & Performance Diagnostics:**
-    
-    - Unhandled exceptions and HTTP 500 errors (include full stack trace).
-        
-    - Slow database queries (execution time > 100ms).
-        
-    - External API timeouts or retries (e.g., payment gateway latency).
-        
-    - Application startup, shutdown, and database migration execution.
-        
-
-### Strictly Forbidden (Do Not Log)
-
-To maintain compliance (GDPR/PCI) and security, **never** log the following:
-
-- Plain-text passwords or password hashes.
-    
-- JWT Access Tokens or Refresh Tokens.
-    
-- Full credit card numbers or CVVs.
-    
-- Personally Identifiable Information (PII) beyond what is strictly necessary for auditing (e.g., do not log full billing address JSON in standard info logs; store that only in the DB).
-    
-
-## 3. Log Level Standards
-
-Use the correct severity level to prevent "log noise" and ensure alerts trigger only when necessary.
-
-|**Level**|**When to Use**|**Example**|**Alert Routing**|
-|---|---|---|---|
-|**Trace/Verbose**|High-volume debugging data. Only enabled locally.|Variable states inside a loop.|None|
-|**Debug**|Standard diagnostic info for development.|"Entering CalculateTax method."|None|
-|**Information**|Normal business operations and lifecycle events.|"Order {OrderId} placed."|Analytics / Dashboards|
-|**Warning**|Expected but abnormal states. System recovers gracefully.|"Rate limit exceeded for IP {IpAddress}"|Daily Digest|
-|**Error**|Current operation failed, but app is alive. Requires investigation.|"Failed to update inventory for {ProductId}"|Active Alerting|
-|**Fatal/Critical**|App crashing, database offline, disk full. Immediate action required.|"Redis connection dropped completely."|PagerDuty / SMS|
-
-## 4. How to Log (Implementation)
-
-### Step 1: Serilog Setup (`Program.cs`)
-
-Configure Serilog to enrich all logs with application context and push them to Seq.
-
-C#
-
-```
-using Serilog;
-using Serilog.Events;
-
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning) // Reduce framework noise
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
-    .WriteTo.Console()
-    .WriteTo.Seq(builder.Configuration["Logging:Seq:ServerUrl"] ?? "http://localhost:5341")
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-```
-
-### Step 2: Global Middleware (Correlation IDs)
-
-Ensure every HTTP request has a unique identifier that flows through the entire transaction.
-
-C#
-
-```
-app.Use(async (context, next) =>
-{
-    // Generate a unique ID for the request
-    var correlationId = Guid.NewGuid().ToString("N");
-    
-    // Extract UserId if authenticated
-    var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Anonymous";
-
-    // Push properties to the Serilog LogContext
-    using (LogContext.PushProperty("CorrelationId", correlationId))
-    using (LogContext.PushProperty("UserId", userId))
-    {
-        await next();
-    }
-});
-```
-
-### Step 3: Injecting and Using the Logger
-
-Use Microsoft's standard `ILogger<T>` interface in your controllers and services. Serilog automatically intercepts this.
-
-C#
-
-```
-using Microsoft.Extensions.Logging;
-
-public class OrderService
-{
-    private readonly ILogger<OrderService> _logger;
-    private readonly ApplicationDbContext _db;
-
-    public OrderService(ILogger<OrderService> logger, ApplicationDbContext db)
-    {
-        _logger = logger;
-        _db = db;
-    }
-
-    public async Task<Order> PlaceOrderAsync(Guid userId, Cart cart)
-    {
-        try
-        {
-            _logger.LogInformation("Processing checkout for User {UserId} with {ItemCount} items", 
-                userId, cart.Items.Count);
-
-            // ... business logic ...
-
-            _logger.LogInformation("Order {OrderId} successfully created with Total {TotalAmount}", 
-                order.Id, order.Total);
-                
-            return order;
-        }
-        catch (DbUpdateException ex)
-        {
-            // Log the exception object as the FIRST parameter
-            _logger.LogError(ex, "Database concurrency conflict while creating Order for User {UserId}", userId);
-            throw;
-        }
-    }
-}
-```
-
-### Step 4: Querying in Seq
-
-With the above setup, you can open the Seq dashboard (`http://localhost:5341`) and use SQL-like queries to find exact events:
-
-- `OrderId == "a1b2c3d4" and @Level = "Information"`
-    
-- `UserId == "123" and Has(@Exception)`
-    
-- `TotalAmount > 100000`
----
-# Grafana Log
-Integrating Grafana into your architecture perfectly rounds out your observability stack. While **Seq** is ideal for querying structured _logs_ (understanding the "why" and "who" of an event), **Grafana** is the industry standard for visualizing _metrics_ (the "how many," "how fast," and "how healthy").
-
-To feed data into Grafana from an ASP.NET Core application, the best-practice approach is to introduce **Prometheus**. Your API will expose a `/metrics` endpoint, Prometheus will scrape it on a timer, and Grafana will visualize that time-series data.
-
-Here is how to update your multi-container setup and application code to support this.
-
-### 1. Update `docker-compose.yml`
-
-We will add two new services: `prometheus` (the time-series database scraper) and `grafana` (the visualization dashboard). We will map Grafana to port `3001` so it doesn't conflict with your React frontend on `3000`.
-
-Add these to your existing `docker-compose.yml`:
-
-YAML
-
-```
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: ecommerce_prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      api:
-        condition: service_started
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: ecommerce_grafana
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=SecureAdmin123! # Default login password
-    ports:
-      - "3001:3000" 
-    depends_on:
-      - prometheus
-```
-
-### 2. Create `prometheus.yml`
-
-In the same root directory as your `docker-compose.yml`, create a file named `prometheus.yml`. This tells Prometheus to look at your .NET API container every 5 seconds to gather metrics.
-
-YAML
-
-```
-global:
-  scrape_interval: 5s
-
-scrape_configs:
-  - job_name: 'ecommerce_api'
-    static_configs:
-      - targets: ['api:8080'] # Points to the internal docker network API port
-```
-
-### 3. Implement OpenTelemetry in ASP.NET Core (.NET 8)
-
-To generate the metrics that Prometheus will scrape, we use **OpenTelemetry**, which is deeply integrated into .NET 8.
-
-**Step A: Install NuGet Packages**
-
-Add these to your `WebAPI.csproj`:
-
-- `OpenTelemetry.Extensions.Hosting`
-    
-- `OpenTelemetry.Instrumentation.AspNetCore`
-    
-- `OpenTelemetry.Instrumentation.Runtime`
-    
-- `OpenTelemetry.Exporter.Prometheus.AspNetCore`
-    
-
-**Step B: Update `Program.cs`**
-
-Inject the OpenTelemetry services to track HTTP requests, CPU/Memory usage, and custom business metrics.
-
-C#
-
-```
-using OpenTelemetry.Metrics;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// ... existing Serilog & DB setup ...
-
-// 1. Configure OpenTelemetry Metrics
-builder.Services.AddOpenTelemetry()
-    .WithMetrics(metrics =>
-    {
-        metrics.AddAspNetCoreInstrumentation()    // Tracks HTTP request durations & errors
-               .AddRuntimeInstrumentation()       // Tracks CPU, Memory, GC collections
-               .AddPrometheusExporter();          // Exposes the /metrics endpoint
-    });
-
-var app = builder.Build();
-
-// ... existing middleware ...
-
-// 2. Map the Prometheus scraping endpoint
-app.MapPrometheusScrapingEndpoint();
-
-app.Run();
-```
-
-### 4. Connecting Grafana to Prometheus
-
-Once your `docker-compose up -d` is running with the new services, you can set up your dashboards:
-
-1. Navigate to **Grafana** at `http://localhost:3001`.
-    
-2. Log in with username `admin` and password `SecureAdmin123!`.
-    
-3. Go to **Connections > Data Sources > Add data source**.
-    
-4. Select **Prometheus**.
-    
-5. In the Connection URL, enter `http://prometheus:9090` (this uses Docker's internal DNS to find the Prometheus container).
-    
-6. Click **Save & Test**.
-    
-
-### 5. Recommended Dashboards to Import
-
-You don't need to build dashboards from scratch. Grafana has a community repository of pre-built templates. You can import them by going to **Dashboards > Import** and pasting these IDs:
-
-- **ID 17706:** (ASP.NET Core / .NET 8) - Shows HTTP request rates, response times, and 4xx/5xx error rates.
-    
-- **ID 17707:** (.NET Runtime) - Visualizes Garbage Collection (GC), Memory usage, ThreadPool contention, and CPU usage.
-    
-
-What specific business KPIs (such as active cart abandonment, total processed order value, or inventory depletion rates) would you like to track, so we can design the custom C# metrics counters for them?
+# Logging & Observability Strategy
+
+The system relies on an integrated combination of structured semantic logging and standard system health middleware probes to maintain real-time visibility.
+
+#### 1. Structured Logging Philosophy (Serilog + Seq)
+Rather than producing flat text log files, the API emits machine-readable structured JSON event packets. This permits rapid diagnostics and log aggregation.
+- **Log Ingestion Engine:** Logs are securely forwarded to an instance of **Seq** exposed locally at `http://localhost:5341` (configured via `Seq__ServerUrl` in the backend service).
+- **Security Control:** Administrative console access is regulated via the secure variable `${SEQ_ADMIN_PASSWORD}`.
+- **Developer Implementation Rule:** Avoid C# string interpolation inside logs to ensure property indexing functions correctly within Seq.
+  * *Bad:* `Log.Information($"Host started at {DateTime.UtcNow}");`
+  * *Good:* `Log.Information("Starting web host...");`
+
+#### 2. System Readiness & Health Checks
+Automated container health checking and live platform monitoring are exposed natively through the `/health` endpoint. This routes internal probes through two critical evaluators:
+- **Database Health Probe (`database`):** Executes an asynchronous connection viability check (`CanConnectAsync()`) against the primary PostgreSQL container to confirm pool availability.
+- **Distributed Cache Probe (`redis`):** Resolves the registered `IConnectionMultiplexer` instance and runs an internal active ping command to guarantee caching layer responsiveness.

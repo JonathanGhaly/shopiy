@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shopiy.Api.Filters;
 using Shopiy.Application.DTOs.Orders;
 using Shopiy.Application.Features.Orders.Commands.CreateOrder;
 using Shopiy.Application.Features.Orders.Commands.UpdateOrderStatus;
@@ -26,6 +27,7 @@ public sealed class OrdersController : ApiControllerBase
     }
 
     [HttpPost]
+    [IdempotentRequest]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
     {
         if (CurrentUserId is null)
