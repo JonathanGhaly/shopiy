@@ -41,7 +41,11 @@ public sealed class ProductsController : ApiControllerBase
             request.Description,
             request.Price,
             request.StockQuantity,
-            request.CategoryIds
+            request.CategoryIds,
+            request.SKU,
+            request.Currency,
+            request.IsActive,
+            request.Metadata
         );
         var result = await Sender.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetProduct), new { slugOrId = result.Id }, result);
@@ -57,7 +61,11 @@ public sealed class ProductsController : ApiControllerBase
             request.Description,
             request.Price,
             request.StockQuantity,
-            request.CategoryIds
+            request.CategoryIds,
+            request.SKU,
+            request.Currency,
+            request.IsActive,
+            request.Metadata
         );
         var result = await Sender.Send(command, cancellationToken);
         return Ok(result);

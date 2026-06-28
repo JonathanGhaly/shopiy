@@ -42,6 +42,22 @@ public sealed class GetOrdersHandler : IRequestHandler<GetOrdersQuery, IEnumerab
             Status = o.Status,
             TotalPrice = o.Total / 100m,
             CreatedAt = o.CreatedAt,
+            UserId = o.UserId,
+            Subtotal = o.Subtotal / 100m,
+            Tax = o.Tax / 100m,
+            Shipping = o.Shipping / 100m,
+            Total = o.Total / 100m,
+            Currency = o.Currency,
+            ShippingAddress = string.IsNullOrWhiteSpace(o.ShippingAddress)
+                ? null
+                : System.Text.Json.JsonSerializer.Deserialize<AddressDto>(o.ShippingAddress, (System.Text.Json.JsonSerializerOptions?)null),
+            BillingAddress = string.IsNullOrWhiteSpace(o.BillingAddress)
+                ? null
+                : System.Text.Json.JsonSerializer.Deserialize<AddressDto>(o.BillingAddress, (System.Text.Json.JsonSerializerOptions?)null),
+            Notes = o.Notes,
+            PlacedAt = o.PlacedAt,
+            ShippedAt = o.ShippedAt,
+            DeliveredAt = o.DeliveredAt,
             Items = o.Items.Select(i => new OrderItemDto
             {
                 ProductId = i.ProductId,

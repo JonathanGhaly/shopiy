@@ -13,11 +13,13 @@ public sealed class GetProductHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetProductHandler(IApplicationDbContext context, IMapper mapper)
+    public GetProductHandler(IApplicationDbContext context, IMapper mapper, ICurrentUserService currentUserService)
     {
         _context = context;
         _mapper = mapper;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ProductDto> Handle(
@@ -45,6 +47,12 @@ public sealed class GetProductHandler
         }
 
         if (product is null)
+        {
+            throw new NotFoundException(nameof(Product), request.SlugOrId);
+        }
+
+        var isAdmin = _currentUserService.Roles.Contains("Admin");
+        if (!product.IsActive && !isAdmin)
         {
             throw new NotFoundException(nameof(Product), request.SlugOrId);
         }

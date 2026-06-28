@@ -146,3 +146,13 @@ F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\refint\Shopiy.Api.dll
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\Shopiy.Api.pdb
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\Shopiy.Api.genruntimeconfig.cache
 F:\Assissment\shopiy\src\Shopiy.Api\obj\Debug\net10.0\ref\Shopiy.Api.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.AspNetCore.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Extensions.Hosting.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Extensions.Logging.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Formatting.Compact.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Settings.Configuration.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Sinks.Console.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Sinks.Debug.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Sinks.File.dll
+F:\Assissment\shopiy\src\Shopiy.Api\bin\Debug\net10.0\Serilog.Sinks.Seq.dll

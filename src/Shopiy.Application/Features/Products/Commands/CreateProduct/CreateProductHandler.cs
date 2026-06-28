@@ -14,11 +14,13 @@ public sealed class CreateProductHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ICacheService _cache;
 
-    public CreateProductHandler(IApplicationDbContext context, IMapper mapper)
+    public CreateProductHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
     {
         _context = context;
         _mapper = mapper;
+        _cache = cache;
     }
 
     public async Task<ProductDto> Handle(
@@ -54,8 +56,12 @@ public sealed class CreateProductHandler
             Description = request.Description.Trim(),
             Price = (int)request.Price, // Request price is in cents
             StockQuantity = request.StockQuantity,
-            IsActive = true,
-            Metadata = "{}"
+            SKU = string.IsNullOrWhiteSpace(request.SKU) ? null : request.SKU.Trim(),
+            Currency = string.IsNullOrWhiteSpace(request.Currency) ? "EGP" : request.Currency.Trim(),
+            IsActive = request.IsActive ?? true,
+            Metadata = request.Metadata != null
+                ? System.Text.Json.JsonSerializer.Serialize(request.Metadata)
+                : "{}"
         };
 
         foreach (var categoryId in request.CategoryIds)
@@ -68,6 +74,8 @@ public sealed class CreateProductHandler
 
         _context.Products.Add(product);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
 
         // Fetch product with categories included for mapping
         var savedProduct = await _context.Products

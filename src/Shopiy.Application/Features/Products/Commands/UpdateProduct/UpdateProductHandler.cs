@@ -14,11 +14,13 @@ public sealed class UpdateProductHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ICacheService _cache;
 
-    public UpdateProductHandler(IApplicationDbContext context, IMapper mapper)
+    public UpdateProductHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
     {
         _context = context;
         _mapper = mapper;
+        _cache = cache;
     }
 
     public async Task<ProductDto> Handle(
@@ -61,6 +63,12 @@ public sealed class UpdateProductHandler
         product.Description = request.Description.Trim();
         product.Price = (int)request.Price; // Request price is in cents
         product.StockQuantity = request.StockQuantity;
+        product.SKU = string.IsNullOrWhiteSpace(request.SKU) ? null : request.SKU.Trim();
+        product.Currency = string.IsNullOrWhiteSpace(request.Currency) ? "EGP" : request.Currency.Trim();
+        product.IsActive = request.IsActive ?? true;
+        product.Metadata = request.Metadata != null
+            ? System.Text.Json.JsonSerializer.Serialize(request.Metadata)
+            : "{}";
         product.MarkUpdated();
 
         // Sync Categories
@@ -75,6 +83,9 @@ public sealed class UpdateProductHandler
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProduct.GetProductQuery", cancellationToken);
 
         // Fetch product with categories included for mapping
         var savedProduct = await _context.Products

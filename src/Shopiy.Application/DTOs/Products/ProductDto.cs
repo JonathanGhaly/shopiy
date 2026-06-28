@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Shopiy.Application.DTOs.Products;
 
 public sealed class ProductDto
@@ -11,6 +13,14 @@ public sealed class ProductDto
     public decimal Price { get; init; }
 
     public int StockQuantity { get; init; }
+
+    public string? SKU { get; init; }
+
+    public string Currency { get; init; } = "EGP";
+
+    public bool IsActive { get; init; }
+
+    public IDictionary<string, object>? Metadata { get; init; }
 
     public IReadOnlyCollection<string> Categories { get; init; } = [];
 }

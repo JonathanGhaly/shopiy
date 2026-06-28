@@ -104,8 +104,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // --------------------------
 
         builder.HasQueryFilter(x =>
-            x.DeletedAt == null &&
-            x.IsActive);
+            x.DeletedAt == null);
 
         // --------------------------
         // Indexes

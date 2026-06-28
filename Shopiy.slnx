@@ -5,4 +5,7 @@
     <Project Path="src/Shopiy.Domain/Shopiy.Domain.csproj" />
     <Project Path="src/Shopiy.Infrastructure/Shopiy.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Shopiy.Application.UnitTests/Shopiy.Application.UnitTests.csproj" />
+  </Folder>
 </Solution>

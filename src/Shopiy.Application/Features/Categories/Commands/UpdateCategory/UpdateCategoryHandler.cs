@@ -14,11 +14,13 @@ public sealed class UpdateCategoryHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ICacheService _cache;
 
-    public UpdateCategoryHandler(IApplicationDbContext context, IMapper mapper)
+    public UpdateCategoryHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
     {
         _context = context;
         _mapper = mapper;
+        _cache = cache;
     }
 
     public async Task<CategoryDto> Handle(
@@ -64,6 +66,10 @@ public sealed class UpdateCategoryHandler
         category.MarkUpdated();
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Categories.Queries.GetCategories.GetCategoriesQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Categories.Queries.GetCategory.GetCategoryQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
 
         return _mapper.Map<CategoryDto>(category);
     }

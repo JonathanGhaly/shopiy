@@ -1,5 +1,7 @@
 using MediatR;
 using Shopiy.Application.DTOs.Products;
+using System;
+using System.Collections.Generic;
 
 namespace Shopiy.Application.Features.Products.Commands.UpdateProduct;
 
@@ -9,5 +11,9 @@ public sealed record UpdateProductCommand(
     string Description,
     decimal Price,
     int StockQuantity,
-    ICollection<Guid> CategoryIds
+    ICollection<Guid> CategoryIds,
+    string? SKU,
+    string? Currency,
+    bool? IsActive,
+    IDictionary<string, object>? Metadata
 ) : IRequest<ProductDto>;

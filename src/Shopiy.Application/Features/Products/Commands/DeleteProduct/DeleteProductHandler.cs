@@ -10,10 +10,12 @@ public sealed class DeleteProductHandler
     : IRequestHandler<DeleteProductCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public DeleteProductHandler(IApplicationDbContext context)
+    public DeleteProductHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task Handle(
@@ -32,5 +34,8 @@ public sealed class DeleteProductHandler
         product.SoftDelete();
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProduct.GetProductQuery", cancellationToken);
     }
 }

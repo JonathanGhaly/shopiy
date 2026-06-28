@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj": {}
+    "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {}
   },
   "projects": {
-    "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj": {
+    "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj",
+        "projectUniqueName": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
         "projectName": "Shopiy.Domain",
-        "projectPath": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/Shopiy.Domain.csproj",
-        "packagesPath": "/home/slinga/.nuget/packages/",
-        "outputPath": "/home/slinga/Desktop/ASP/shopiy/src/Shopiy.Domain/obj/",
+        "projectPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\Shopiy.Domain.csproj",
+        "packagesPath": "C:\\Users\\jghal\\.nuget\\packages\\",
+        "outputPath": "F:\\Assissment\\shopiy\\src\\Shopiy.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/slinga/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\jghal\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -70,7 +70,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/slinga/.dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

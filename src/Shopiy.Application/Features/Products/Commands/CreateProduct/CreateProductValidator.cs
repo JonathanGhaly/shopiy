@@ -19,5 +19,13 @@ public sealed class CreateProductValidator : AbstractValidator<CreateProductComm
 
         RuleFor(x => x.StockQuantity)
             .GreaterThanOrEqualTo(0).WithMessage("Stock quantity cannot be negative.");
+
+        RuleFor(x => x.SKU)
+            .NotEmpty().WithMessage("SKU is required.")
+            .MaximumLength(100).WithMessage("SKU cannot exceed 100 characters.");
+
+        RuleFor(x => x.Currency)
+            .NotEmpty().WithMessage("Currency is required.")
+            .Length(3).WithMessage("Currency must be a 3-character ISO code.");
     }
 }

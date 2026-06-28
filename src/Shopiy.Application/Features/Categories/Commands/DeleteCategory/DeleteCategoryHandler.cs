@@ -10,10 +10,12 @@ public sealed class DeleteCategoryHandler
     : IRequestHandler<DeleteCategoryCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public DeleteCategoryHandler(IApplicationDbContext context)
+    public DeleteCategoryHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task Handle(
@@ -39,5 +41,9 @@ public sealed class DeleteCategoryHandler
         category.SoftDelete();
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Categories.Queries.GetCategories.GetCategoriesQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Categories.Queries.GetCategory.GetCategoryQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
     }
 }

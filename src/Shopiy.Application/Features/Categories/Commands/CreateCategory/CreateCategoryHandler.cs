@@ -15,15 +15,18 @@ public sealed class CreateCategoryHandler
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cache;
 
     public CreateCategoryHandler(
         IApplicationDbContext context,
         IMapper mapper,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ICacheService cache)
     {
         _context = context;
         _mapper = mapper;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task<CategoryDto> Handle(
@@ -63,6 +66,9 @@ public sealed class CreateCategoryHandler
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Categories.Queries.GetCategories.GetCategoriesQuery", cancellationToken);
+        await _cache.RemoveByPrefixAsync("Shopiy.Application.Features.Products.Queries.GetProducts.GetProductsQuery", cancellationToken);
 
         return _mapper.Map<CategoryDto>(category);
     }
