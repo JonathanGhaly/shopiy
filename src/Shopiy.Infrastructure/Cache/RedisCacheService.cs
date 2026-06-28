@@ -84,7 +84,7 @@ public sealed class RedisCacheService : ICacheService
         try
         {
             var server = _redis.GetServer(_redis.GetEndPoints().First());
-            var keys = server.Keys(pattern: $"{prefix}*").ToArray();
+            var keys = server.Keys(pattern: $"*{prefix}*").ToArray();
 
             if (keys.Length > 0)
             {

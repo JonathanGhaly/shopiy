@@ -30,8 +30,10 @@ services:
     ports:
       - "5341:80"
     environment:
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD}
       ACCEPT_EULA: Y
-
+    volumes:
+      - seq_data:/data 
   shopiy-api:
     build:
       context: .
@@ -58,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+  seq_data:
