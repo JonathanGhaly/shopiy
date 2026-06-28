@@ -18,9 +18,10 @@ public sealed class ProductsController : ApiControllerBase
         [FromQuery] int limit = 20,
         [FromQuery] string? sort = null,
         [FromQuery] Guid? categoryId = null,
+        [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await Sender.Send(new GetProductsQuery(page, limit, sort, categoryId), cancellationToken);
+        var result = await Sender.Send(new GetProductsQuery(page, limit, sort, categoryId, search), cancellationToken);
         return Ok(result);
     }
 

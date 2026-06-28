@@ -90,7 +90,43 @@ Building software for a 5-day assessment requires balance between enterprise-gra
 
 ---
 
-## 5. Future Feature & Production Roadmap
+## 5. Order Idempotency & Concurrency Design
+
+Our strategy for preventing duplicate submissions (double billing, duplicate inventory decrement) employs a multi-layered defense-in-depth model across the API, memory caches, database, and client interface:
+
+### A. Backend Idempotency Key (`X-Idempotency-Key`)
+The API exposes a custom `[IdempotentRequest]` action filter that enforces client-supplied idempotency.
+- The filter intercepts incoming requests on the `CreateOrder` endpoint and inspects the `X-Idempotency-Key` header.
+- The header value is validated against a strict UUID structure. Requests with missing or invalid keys are immediately rejected with a `400 Bad Request` to preserve database and network resources.
+
+### B. Redis Lock and Lifecycle Management
+To guarantee concurrency protection:
+- The filter attempts to set a lock in Redis (`idempotency:{key}`) with the state `processing` using an atomic `StringSetAsync(..., When.NotExists)` with a 5-minute TTL.
+- If the key exists in the `processing` state, a `409 Conflict` is returned.
+- If it exists in the `completed` state, the cached response payload (HTTP status code and response JSON body) is returned immediately to the client. This handles edge-cases where the first request succeeds but the network drops before the client receives the response.
+
+### C. Database Integrity & Unique Constraints
+While the Redis cache represents the fast-path gateway check, persistence constraints form the ultimate source of truth:
+- The database schema enforces a unique constraint on target entities to prevent double records.
+- If Redis fails, is rebooted, or encounters a rare split-brain/network-partition state, PostgreSQL unique constraints act as the absolute final safeguard, raising a duplicate key exception which is handled gracefully.
+
+### D. Transaction Handling & Fail-Safe Eviction
+- Downstream business logic (order creation, ledger updates, inventory checks) is executed within a database ACID transaction.
+- If any operation fails or throws an exception, the database transaction is completely rolled back to maintain consistency.
+- Concurrently, the `[IdempotentRequest]` filter catches the exception (or detects a `>= 400` status code response), and instantly calls `KeyDeleteAsync` in Redis. This evicts the lock key immediately, making the request **retry-safe** so the customer can correct parameters and re-submit without a 5-minute lockout.
+
+### E. Structured Telemetry & Duplicate Logging
+- The filter captures duplicate request attempts and logs them using structured **Serilog** templates:
+  `_logger.LogWarning("Duplicate submission detected. Intercepted request with idempotency key: {IdempotencyKey}", parsedGuid);`
+- These logs automatically capture the key, request path, status code, IP address, and other ambient trace metrics, providing immediate visibility and audit trails for security operations (detecting potential replay attacks).
+
+### F. Frontend Button Disabling (Supporting UI Measure Only)
+- During order checkout submission, the React application disables the submit button and displays a loading spinner to prevent accidental double-clicks.
+- **Critical Principle:** This client-side lockout is purely a supporting UX optimization. It is never relied upon as a security or concurrency guarantee, as the backend remains the sole, authoritative source of truth.
+
+---
+
+## 6. Future Feature & Production Roadmap
 
 To scale this codebase to an enterprise-level storefront processing millions of daily transactions, the following architectural additions would be implemented next:
 
@@ -100,3 +136,22 @@ To scale this codebase to an enterprise-level storefront processing millions of 
     Relational databases are inefficient for full-text search, facets, and type-ahead matching. We would synchronize catalog changes to an Elasticsearch index using a Change Data Capture (CDC) tool like Debezium, allowing search latency to drop to sub-50ms under heavy concurrent read volumes.
 3.  **BFF (Backend-For-Frontend) API Gateway:**
     Introduce YARP (Yet Another Reverse Proxy) as a secure gateway to manage routing, global rate-limiting, SSL termination, and CORS headers centrally, isolating micro-services from public networks.
+4.  **Direct-to-Cloud Product Image Ingestion:**
+    To handle product media assets at scale without bloating the core application servers or database storage:
+    - Implement a secure pre-signed URL generation flow. The backend API authenticates the request and generates short-lived upload signatures.
+    - The client client-side uploads high-resolution assets directly to cloud object storage (e.g., AWS S3 or Azure Blob Storage), avoiding transit server memory overhead.
+    - Run an automated media pipeline (e.g., serverless function converting to WebP) and cache optimized assets globally via a CDN (e.g., AWS CloudFront or Cloudflare) to minimize latency.
+5.  **Asynchronous Real-Time Notifications & Status Synchronization:**
+    To establish a highly reactive storefront and dashboard system:
+    - Integrate ASP.NET Core SignalR hubs (WebSockets with Server-Sent Events fallback) to stream real-time order state progression (e.g., `Processing` to `Shipped`) directly to client dashboards.
+    - Decouple external communication systems. Avoid calling email (SendGrid) or SMS (Twilio) APIs synchronously during order state transitions. Instead, dispatch notifications asynchronously via the Outbox pattern to eliminate API blocking and guarantee delivery.
+6.  **Containerized Integration Testing via Testcontainers:**
+    While unit tests leverage the lightweight EF Core In-Memory provider to maintain rapid development cycles:
+    - Implement a secondary integration test suite utilizing **Testcontainers for .NET**.
+    - The pipeline dynamically spins up Docker-backed PostgreSQL 17 and Redis 7 instances during CI runs.
+    - This validates database-specific dialect logic (like JSONB index lookups and row locks) and real Redis connection and eviction behaviors under actual I/O constraints before code is promoted.
+7. **Add payment gateway integration**
+    While the current storefront manages stock and order records internally, a full-scale e-commerce platform requires robust payment processing. To support this evolution, we would integrate **Stripe** (or a local payment gateway provider) via the official SDK. This integration would focus on:
+    - Secure tokenization of cardholder data (leveraging Stripe Elements to keep sensitive data off our PCI scope).
+    - Orchestration of the payment lifecycle: authorization during checkout and capture upon shipment (or full immediate capture, depending on business rules).
+    - Asynchronous handling of payment webhooks (via Outbox) to reconcile and update order statuses, protecting the core transaction logic from external payment gateway downtimes.

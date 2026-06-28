@@ -11,5 +11,6 @@ public sealed record GetProductsQuery(
     int Page = 1,
     int Limit = 20,
     string? Sort = null,
-    Guid? CategoryId = null
+    Guid? CategoryId = null,
+    string? Search = null
 ) : IRequest<PaginatedResult<ProductDto>>;

@@ -45,6 +45,15 @@ public sealed class GetProductsHandler
             query = query.Where(p => p.ProductCategories.Any(pc => pc.CategoryId == request.CategoryId.Value));
         }
 
+        // Search Filter
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var searchLower = request.Search.ToLower();
+            query = query.Where(p => p.Name.ToLower().Contains(searchLower) || 
+                                     (p.Description != null && p.Description.ToLower().Contains(searchLower)) ||
+                                     (p.SKU != null && p.SKU.ToLower().Contains(searchLower)));
+        }
+
         // Sorting
         query = request.Sort?.ToLower() switch
         {
