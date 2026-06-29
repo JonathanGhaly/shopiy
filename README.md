@@ -26,7 +26,57 @@ The system is split into decoupled layers, utilizing state-of-the-art frameworks
 
 ---
 
-## 3. Quick Start & Installation
+## 3. Clean Architecture & System Design
+
+The backend is built adhering to **Clean Architecture** principles and the **CQRS (Command Query Responsibility Segregation)** pattern. This isolates core business logic and domain rules from external concerns like database persistence, user interfaces, and third-party integrations.
+
+```mermaid
+graph TD
+    API[Shopiy.Api] --> Infrastructure[Shopiy.Infrastructure]
+    API --> Application[Shopiy.Application]
+    Infrastructure --> Application
+    Infrastructure --> Domain[Shopiy.Domain]
+    Application --> Domain
+```
+
+### Architectural Layers
+
+#### A. Domain Layer ([Shopiy.Domain](file:///f:/Assissment/shopiy/src/Shopiy.Domain))
+*   **Role:** The core of the application. It defines the enterprise business rules and state.
+*   **Dependencies:** None. Pure C# library containing zero references to database drivers, EF Core, or frameworks.
+*   **Contents:**
+    *   **Entities:** Core data entities (e.g., [Product](file:///f:/Assissment/shopiy/src/Shopiy.Domain/Entities/Product.cs), [Category](file:///f:/Assissment/shopiy/src/Shopiy.Domain/Entities/Category.cs), [Order](file:///f:/Assissment/shopiy/src/Shopiy.Domain/Entities/Order.cs), [OrderItem](file:///f:/Assissment/shopiy/src/Shopiy.Domain/Entities/OrderItem.cs)).
+    *   **Interfaces:** Domain-specific abstractions (e.g., [IApplicationDbContext](file:///f:/Assissment/shopiy/src/Shopiy.Domain/Interfaces/IApplicationDbContext.cs)).
+    *   **Enums/Value Objects:** Shared structural data constraints.
+
+#### B. Application Layer ([Shopiy.Application](file:///f:/Assissment/shopiy/src/Shopiy.Application))
+*   **Role:** Implements the application use cases and orchestrates business flow.
+*   **Dependencies:** Depends only on the Domain layer.
+*   **Contents:**
+    *   **CQRS Features (Commands & Queries):** Divided by entity domain (e.g., [Products](file:///f:/Assissment/shopiy/src/Shopiy.Application/Features/Products), [Categories](file:///f:/Assissment/shopiy/src/Shopiy.Application/Features/Categories), [Orders](file:///f:/Assissment/shopiy/src/Shopiy.Application/Features/Orders)). Each command/query has its own Request, Handler, and DTO definition, executed via **MediatR**.
+    *   **Validation Rules:** Handled via **FluentValidation** using pipeline behaviors to validate requests automatically before handlers are executed.
+    *   **Exceptions:** Custom domain exceptions translated to HTTP responses globally.
+    *   **Interfaces:** Helper service interfaces (e.g., [ICacheService](file:///f:/Assissment/shopiy/src/Shopiy.Application/Interfaces/ICacheService.cs)).
+
+#### C. Infrastructure Layer ([Shopiy.Infrastructure](file:///f:/Assissment/shopiy/src/Shopiy.Infrastructure))
+*   **Role:** Implements interface contracts defined in the Application/Domain layers. Handles all technical details and physical adapters.
+*   **Dependencies:** Depends on the Domain and Application layers.
+*   **Contents:**
+    *   **Persistence:** PostgreSQL database connection, EF Core migrations, configuration definitions, and [ApplicationDbContext](file:///f:/Assissment/shopiy/src/Shopiy.Infrastructure/Persistence/ApplicationDbContext.cs) implementation.
+    *   **Caching:** Redis caching implementation using StackExchange.Redis.
+    *   **Authentication:** JWT token generation and validation middleware ([RefreshTokenService](file:///f:/Assissment/shopiy/src/Shopiy.Infrastructure/Authentication/RefreshTokenService.cs)).
+
+#### D. Api Layer ([Shopiy.Api](file:///f:/Assissment/shopiy/src/Shopiy.Api))
+*   **Role:** The presentation boundary and entry point. It is responsible for handling HTTP requests, routing, security, and response generation.
+*   **Dependencies:** Depends on Infrastructure and Application layers.
+*   **Contents:**
+    *   **Controllers:** Thin HTTP controllers/endpoints that simply dispatch commands and queries to MediatR handlers.
+    *   **Filters:** Cross-cutting concerns like custom Exception filters and the [[IdempotentRequest]](file:///f:/Assissment/shopiy/src/Shopiy.Api/Filters/IdempotentRequestAttribute.cs) Action Filter.
+    *   **Middleware:** Global request processing pipelines.
+
+---
+
+## 4. Quick Start & Installation
 
 Ensure you have [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed on your machine.
 
@@ -66,7 +116,7 @@ dotnet test tests/Shopiy.Application.UnitTests/Shopiy.Application.UnitTests.cspr
 
 ---
 
-## 4. System Design & Architectural Trade-offs
+## 5. System Design & Architectural Trade-offs
 
 Building software for a 5-day assessment requires balance between enterprise-grade robustness and delivery speed. Below is a summary of key architectural decisions and their trade-offs:
 
@@ -90,7 +140,7 @@ Building software for a 5-day assessment requires balance between enterprise-gra
 
 ---
 
-## 5. Order Idempotency & Concurrency Design
+## 6. Order Idempotency & Concurrency Design
 
 Our strategy for preventing duplicate submissions (double billing, duplicate inventory decrement) employs a multi-layered defense-in-depth model across the API, memory caches, database, and client interface:
 
@@ -126,7 +176,7 @@ While the Redis cache represents the fast-path gateway check, persistence constr
 
 ---
 
-## 6. Future Feature & Production Roadmap
+## 7. Future Feature & Production Roadmap
 
 To scale this codebase to an enterprise-level storefront processing millions of daily transactions, the following architectural additions would be implemented next:
 
